@@ -53,11 +53,11 @@ def add_lending():
                 "status": "error",
                 "message": f"Missing fields: {', '.join(missing_fields)}"
             }), 400
-        
+
         # Convert string ID to string format
         lending_id = str(data.get('id', len(lendings)))
         data['id'] = lending_id
-        
+
         lendings.append(data)
         save_lendings()
         return jsonify({"status": "success", "lending": data}), 201
@@ -74,29 +74,29 @@ def record_payment(lending_id):
         data = request.get_json()
         amount = float(data.get('amount', 0))
         payment_date = data.get('date', datetime.now().strftime('%Y-%m-%d'))
-        
+
         # Find the lending
         lending = None
         for lend in lendings:
             if str(lend.get('id')) == str(lending_id):
                 lending = lend
                 break
-        
+
         if not lending:
             return jsonify({"status": "error", "message": "Lending not found"}), 404
-        
+
         # Update received amount
         lending['received'] = lending.get('received', 0) + amount
-        
+
         # Add payment to history
         if 'payments' not in lending:
             lending['payments'] = []
-        
+
         lending['payments'].append({
             'date': payment_date,
             'amount': amount
         })
-        
+
         # Update schedule items
         remaining_to_pay = amount
         if 'schedule' in lending:
@@ -111,11 +111,11 @@ def record_payment(lending_id):
                     else:
                         schedule_item['receivedAmount'] = schedule_item.get('receivedAmount', 0) + remaining_to_pay
                         remaining_to_pay = 0
-        
+
         # Check if lending is completed
         if lending['received'] >= lending['returnAmount']:
             lending['status'] = 'completed'
-        
+
         save_lendings()
         return jsonify({"status": "success", "lending": lending}), 200
     except Exception as e:
@@ -150,17 +150,17 @@ def get_analytics():
         total_received = sum(l.get('received', 0) for l in lendings)
         total_outstanding = sum(l.get('returnAmount', 0) - l.get('received', 0) for l in lendings)
         total_interest = sum(l.get('interestAmount', 0) for l in lendings)
-        
+
         # Count by type
         weekly_count = len([l for l in lendings if l.get('type') == 'weekly'])
         daily_count = len([l for l in lendings if l.get('type') == 'daily'])
         monthly_count = len([l for l in lendings if l.get('type') == 'monthly'])
-        
+
         # Pending collections
         today = datetime.now().date()
         next_week = today + timedelta(days=7)
         pending = []
-        
+
         for lending in lendings:
             if lending.get('status') == 'active' and 'schedule' in lending:
                 for item in lending['schedule']:
@@ -173,7 +173,7 @@ def get_analytics():
                                 'dueDate': item['dueDate'],
                                 'lendingType': lending.get('type')
                             })
-        
+
         return jsonify({
             "totalLent": total_lent,
             "totalReceived": total_received,
@@ -192,4 +192,7 @@ def get_analytics():
         return jsonify({"status": "error", "message": str(e)}), 400
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    # debug=False (no auto-reloader) avoids spawning a child process,
+    # which prevents "Address already in use" errors inside the container.
+    debug_mode = os.environ.get("FLASK_DEBUG", "0") == "1"
+    app.run(host="0.0.0.0", port=5000, debug=debug_mode)
