@@ -5,9 +5,9 @@
 }
 
 :root {
-  --primary-color: #2d5f3f;
-  --primary-dark: #1f4620;
-  --accent-color: #d4a574;
+  --primary-color: #0d3b66;   /* deep dark blue */
+  --primary-dark: #082644;    /* even darker navy */
+  --accent-color: #1e6091;    /* medium blue accent */
   --text-primary: #333;
   --text-light: #666;
   --border-color: #ddd;
@@ -115,6 +115,31 @@ body {
   flex: 1;
   overflow-y: auto;
   padding: 2rem 3rem;
+}
+
+.device-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+.device-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.45rem;
+  background: white;
+  color: var(--primary-color);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.device-toggle:hover {
+  border-color: var(--primary-color);
+  background: #fff7f2;
 }
 
 .page {
@@ -783,6 +808,58 @@ body {
 
 /* ============ RESPONSIVE ============ */
 @media (max-width: 768px) {
+  .container,
+  body.mobile-mode .container {
+    display: block;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .sidebar,
+  body.mobile-mode .sidebar {
+    width: 100%;
+    min-height: auto;
+    padding: 1.25rem 1rem;
+  }
+
+  .sidebar-header,
+  body.mobile-mode .sidebar-header {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  .sidebar-menu,
+  body.mobile-mode .sidebar-menu {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .menu-section-title,
+  body.mobile-mode .menu-section-title {
+    grid-column: 1 / -1;
+    margin-top: 0.25rem;
+  }
+
+  .menu-item,
+  body.mobile-mode .menu-item {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  .main-content,
+  body.mobile-mode .main-content {
+    padding: 1.25rem 1rem;
+  }
+
+  .device-toolbar {
+    margin-bottom: 0.75rem;
+  }
+
+  .device-toggle {
+    min-height: 42px;
+  }
+
   .section-heading {
     align-items: flex-start;
     flex-direction: column;
@@ -821,6 +898,15 @@ body {
     width: 100%;
     text-align: left;
   }
+}
+
+body.mobile-mode .container {
+  max-width: 430px;
+  margin: 0 auto;
+}
+
+body.desktop-mode .container {
+  min-width: 900px;
 }
 /* ============ PAYMENT MODAL ============ */
 .modal-overlay {

@@ -4,6 +4,10 @@ const localApiOrigin = 'http://localhost:5000';
 const sheetsApiOrigin = (window.GOOGLE_SHEETS_WEB_APP_URL || '').replace(/\/$/, '');
 const nativeFetch = window.fetch.bind(window);
 
+// Keep the selected layout when the page is reopened.
+const savedDeviceMode = localStorage.getItem('finance-app-device-mode');
+document.body.classList.add(savedDeviceMode || (window.matchMedia('(max-width: 768px)').matches ? 'mobile-mode' : 'desktop-mode'));
+
 window.fetch = async (url, options = {}) => {
   if (!sheetsApiOrigin || typeof url !== 'string' || !url.startsWith(localApiOrigin)) {
     return nativeFetch(url, options);
@@ -25,6 +29,21 @@ window.fetch = async (url, options = {}) => {
     json: async () => data
   };
 };
+
+function updateDeviceToggle() {
+  const isMobile = document.body.classList.contains('mobile-mode');
+  document.getElementById('device-toggle-icon').textContent = isMobile ? '▣' : '▯';
+  document.getElementById('device-toggle-label').textContent = isMobile ? 'Mobile view' : 'Desktop view';
+  document.getElementById('device-toggle').setAttribute('aria-label', `Switch to ${isMobile ? 'desktop' : 'mobile'} view`);
+}
+
+document.getElementById('device-toggle').addEventListener('click', () => {
+  const isMobile = document.body.classList.toggle('mobile-mode');
+  document.body.classList.toggle('desktop-mode', !isMobile);
+  localStorage.setItem('finance-app-device-mode', isMobile ? 'mobile-mode' : 'desktop-mode');
+  updateDeviceToggle();
+});
+updateDeviceToggle();
 
 // ============ PAGE NAVIGATION ============
 const menuItems = document.querySelectorAll('.menu-item');
