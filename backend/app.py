@@ -9,6 +9,8 @@ CORS(app)  # Enable CORS for frontend requests
 
 # Keep the simple list API, but persist it so a Flask restart does not erase data.
 DATA_FILE = os.path.join(os.path.dirname(__file__), "lendings.json")
+LOANS_DATA_FILE = os.path.join(os.path.dirname(__file__), "loans.json")
+CHITS_DATA_FILE = os.path.join(os.path.dirname(__file__), "chits.json")
 
 
 def load_lendings():
@@ -28,6 +30,44 @@ def save_lendings():
 
 
 lendings = load_lendings()
+
+
+def load_loans():
+    try:
+        with open(LOANS_DATA_FILE, "r", encoding="utf-8") as file:
+            data = json.load(file)
+            return data if isinstance(data, list) else []
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
+
+
+def save_loans():
+    temporary_file = f"{LOANS_DATA_FILE}.tmp"
+    with open(temporary_file, "w", encoding="utf-8") as file:
+        json.dump(loans, file, indent=2)
+    os.replace(temporary_file, LOANS_DATA_FILE)
+
+
+loans = load_loans()
+
+
+def load_chits():
+    try:
+        with open(CHITS_DATA_FILE, "r", encoding="utf-8") as file:
+            data = json.load(file)
+            return data if isinstance(data, list) else []
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
+
+
+def save_chits():
+    temporary_file = f"{CHITS_DATA_FILE}.tmp"
+    with open(temporary_file, "w", encoding="utf-8") as file:
+        json.dump(chits, file, indent=2)
+    os.replace(temporary_file, CHITS_DATA_FILE)
+
+
+chits = load_chits()
 
 @app.route("/")
 def index():
@@ -137,9 +177,161 @@ def clear_all():
         global lendings
         lendings = []
         save_lendings()
+        loans.clear()
+        save_loans()
+        chits.clear()
+        save_chits()
         return jsonify({"status": "success"}), 200
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
+
+# ============ LOAN ENDPOINTS ============
+
+@app.route("/add_loan", methods=["POST"])
+def add_loan():
+    try:
+        data = request.get_json()
+        if not isinstance(data, dict):
+            return jsonify({"status": "error", "message": "JSON object required"}), 400
+
+        required_fields = ["bankName", "date", "loanAmount", "monthlyInterest"]
+        missing_fields = [field for field in required_fields if data.get(field) in (None, "")]
+        if missing_fields:
+            return jsonify({
+                "status": "error",
+                "message": f"Missing fields: {', '.join(missing_fields)}"
+            }), 400
+
+        loan = {
+            "id": str(data.get("id", datetime.now().timestamp())),
+            "bankName": str(data["bankName"]).strip(),
+            "date": data["date"],
+            "loanAmount": float(data["loanAmount"]),
+            "monthlyInterest": float(data["monthlyInterest"]),
+            "notes": data.get("notes", ""),
+            "interestPayments": [],
+            "createdAt": datetime.now().isoformat()
+        }
+        loans.append(loan)
+        save_loans()
+        return jsonify({"status": "success", "loan": loan}), 201
+    except (TypeError, ValueError, KeyError) as error:
+        return jsonify({"status": "error", "message": str(error)}), 400
+
+
+@app.route("/get_loans", methods=["GET"])
+def get_loans():
+    return jsonify(loans)
+
+
+@app.route("/record_loan_interest/<loan_id>", methods=["POST"])
+def record_loan_interest(loan_id):
+    try:
+        data = request.get_json() or {}
+        amount = float(data.get("amount", 0))
+        payment_date = data.get("date", datetime.now().strftime("%Y-%m-%d"))
+        if amount <= 0 or not payment_date:
+            return jsonify({"status": "error", "message": "A positive amount and date are required"}), 400
+
+        loan = next((item for item in loans if str(item.get("id")) == str(loan_id)), None)
+        if not loan:
+            return jsonify({"status": "error", "message": "Loan not found"}), 404
+
+        loan.setdefault("interestPayments", []).append({"date": payment_date, "amount": amount})
+        save_loans()
+        return jsonify({"status": "success", "loan": loan}), 200
+    except (TypeError, ValueError) as error:
+        return jsonify({"status": "error", "message": str(error)}), 400
+
+
+@app.route("/delete_loan/<loan_id>", methods=["DELETE"])
+def delete_loan(loan_id):
+    try:
+        original_count = len(loans)
+        loans[:] = [loan for loan in loans if str(loan.get("id")) != str(loan_id)]
+        if len(loans) == original_count:
+            return jsonify({"status": "error", "message": "Loan not found"}), 404
+        save_loans()
+        return jsonify({"status": "success"}), 200
+    except Exception as error:
+        return jsonify({"status": "error", "message": str(error)}), 400
+
+# ============ CHIT ENDPOINTS ============
+
+@app.route("/add_chit", methods=["POST"])
+def add_chit():
+    try:
+        data = request.get_json()
+        if not isinstance(data, dict):
+            return jsonify({"status": "error", "message": "JSON object required"}), 400
+
+        required_fields = ["personName", "chitAmount"]
+        missing_fields = [field for field in required_fields if data.get(field) in (None, "")]
+        if missing_fields:
+            return jsonify({
+                "status": "error",
+                "message": f"Missing fields: {', '.join(missing_fields)}"
+            }), 400
+
+        chit = {
+            "id": str(data.get("id", datetime.now().timestamp())),
+            "personName": str(data["personName"]).strip(),
+            "chitAmount": float(data["chitAmount"]),
+            "payments": [],
+            "notes": data.get("notes", ""),
+            "createdAt": datetime.now().isoformat()
+        }
+        if chit["chitAmount"] <= 0:
+            return jsonify({"status": "error", "message": "Enter a positive chit amount"}), 400
+
+        chits.append(chit)
+        save_chits()
+        return jsonify({"status": "success", "chit": chit}), 201
+    except (TypeError, ValueError, KeyError) as error:
+        return jsonify({"status": "error", "message": str(error)}), 400
+
+
+@app.route("/get_chits", methods=["GET"])
+def get_chits():
+    return jsonify(chits)
+
+
+@app.route("/record_chit_payment/<chit_id>", methods=["POST"])
+def record_chit_payment(chit_id):
+    try:
+        data = request.get_json() or {}
+        amount = float(data.get("amount", 0))
+        payment_date = data.get("date", "")
+        payment_note = str(data.get("note", "")).strip()
+        if amount <= 0 or not payment_date:
+            return jsonify({"status": "error", "message": "A positive amount and date are required"}), 400
+
+        chit = next((item for item in chits if str(item.get("id")) == str(chit_id)), None)
+        if not chit:
+            return jsonify({"status": "error", "message": "Chit not found"}), 404
+
+        chit.setdefault("payments", []).append({
+            "date": payment_date,
+            "amount": amount,
+            "note": payment_note
+        })
+        save_chits()
+        return jsonify({"status": "success", "chit": chit}), 200
+    except (TypeError, ValueError) as error:
+        return jsonify({"status": "error", "message": str(error)}), 400
+
+
+@app.route("/delete_chit/<chit_id>", methods=["DELETE"])
+def delete_chit(chit_id):
+    try:
+        original_count = len(chits)
+        chits[:] = [chit for chit in chits if str(chit.get("id")) != str(chit_id)]
+        if len(chits) == original_count:
+            return jsonify({"status": "error", "message": "Chit not found"}), 404
+        save_chits()
+        return jsonify({"status": "success"}), 200
+    except Exception as error:
+        return jsonify({"status": "error", "message": str(error)}), 400
 
 # ============ ANALYTICS ENDPOINTS ============
 

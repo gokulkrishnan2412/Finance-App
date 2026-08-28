@@ -20,6 +20,9 @@
         <button class="menu-item active" data-page="add-lending">
           <span class="menu-icon">➕</span> Add Lending
         </button>
+        <button class="menu-item" data-page="add-loan">
+          <span class="menu-icon">🏦</span> Add Loan
+        </button>
         <div class="menu-section-title">Dashboards</div>
         <button class="menu-item" data-page="dashboard-daily">
           <span class="menu-icon">📆</span> Daily
@@ -29,6 +32,12 @@
         </button>
         <button class="menu-item" data-page="dashboard-monthly">
           <span class="menu-icon">📊</span> Monthly
+        </button>
+        <button class="menu-item" data-page="chit">
+          <span class="menu-icon">🧾</span> Chit
+        </button>
+        <button class="menu-item" data-page="loans">
+          <span class="menu-icon">🏦</span> Loans
         </button>
         <button class="menu-item" data-page="analytics">
           <span class="menu-icon">📈</span> Analytics
@@ -132,6 +141,42 @@
           </div>
 
           <button type="submit" class="submit-btn">✓ ADD LENDING</button>
+        </form>
+      </div>
+
+      <!-- Add Loan Page -->
+      <div id="add-loan" class="page">
+        <div class="page-header">
+          <h1>Add New Loan</h1>
+          <p>Save the bank loan details once, then record interest payments from the Loans tab</p>
+        </div>
+
+        <form id="loan-form" class="lending-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="bank-name">BANK NAME *</label>
+              <input type="text" id="bank-name" placeholder="e.g., HDFC Bank" required>
+            </div>
+            <div class="form-group">
+              <label for="loan-date">LOAN DATE *</label>
+              <input type="date" id="loan-date" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="loan-amount">LOAN AMOUNT (₹) *</label>
+              <input type="number" id="loan-amount" min="0.01" step="0.01" placeholder="500000" required>
+            </div>
+            <div class="form-group">
+              <label for="monthly-interest">MONTHLY INTEREST (₹) *</label>
+              <input type="number" id="monthly-interest" min="0.01" step="0.01" placeholder="4500" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="loan-notes">NOTES</label>
+            <textarea id="loan-notes" placeholder="Account number or other notes..." rows="3"></textarea>
+          </div>
+          <button type="submit" class="submit-btn">✓ ADD LOAN</button>
         </form>
       </div>
 
@@ -243,6 +288,65 @@
         </div>
       </div>
 
+      <!-- Chit Page -->
+      <div id="chit" class="page">
+        <div class="page-header">
+          <h1>Chit</h1>
+          <p>Track chit amounts and record each payment with its date</p>
+        </div>
+
+        <form id="chit-form" class="lending-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="chit-person-name">PERSON NAME *</label>
+              <input type="text" id="chit-person-name" placeholder="e.g., Prakash" required>
+            </div>
+            <div class="form-group">
+              <label for="chit-amount">CHIT AMOUNT (₹) *</label>
+              <input type="number" id="chit-amount" min="0.01" step="0.01" placeholder="100000" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="chit-notes">NOTES</label>
+            <textarea id="chit-notes" placeholder="Enter your notes..." rows="4"></textarea>
+          </div>
+          <button type="submit" class="submit-btn">✓ ADD CHIT</button>
+        </form>
+
+        <div class="metrics-grid chit-metrics">
+          <div class="metric-card"><div class="metric-label">TOTAL CHIT AMOUNT</div><div class="metric-value">₹<span id="chit-total-amount">0.00</span></div></div>
+          <div class="metric-card"><div class="metric-label">TOTAL PAID</div><div class="metric-value income">₹<span id="chit-total-paid">0.00</span></div></div>
+          <div class="metric-card"><div class="metric-label">REMAINING AMOUNT</div><div class="metric-value expense">₹<span id="chit-total-remaining">0.00</span></div></div>
+        </div>
+
+        <div class="lendings-section">
+          <h2>My Chits</h2>
+          <div id="chit-list" class="lendings-list"></div>
+        </div>
+      </div>
+
+      <!-- Loans Page -->
+      <div id="loans" class="page">
+        <div class="page-header">
+          <h1>Bank Loans</h1>
+          <p>Track loan principal and the interest you pay each month</p>
+        </div>
+
+        <div class="metrics-grid loan-metrics">
+          <div class="metric-card"><div class="metric-label">TOTAL BORROWED</div><div class="metric-value">₹<span id="loans-total-amount">0.00</span></div></div>
+          <div class="metric-card"><div class="metric-label">PENDING THIS MONTH</div><div class="metric-value expense">₹<span id="loans-pending-interest">0.00</span></div></div>
+          <div class="metric-card"><div class="metric-label">INTEREST PAID</div><div class="metric-value income">₹<span id="loans-interest-paid">0.00</span></div></div>
+        </div>
+
+        <div class="lendings-section">
+          <div class="section-heading">
+            <h2>My Loans</h2>
+            <button type="button" class="btn-small" onclick="exportLoanReport()">📥 Download Google Sheets CSV</button>
+          </div>
+          <div id="loans-list" class="lendings-list"></div>
+        </div>
+      </div>
+
       <!-- Analytics Page -->
       <div id="analytics" class="page">
         <div class="page-header">
@@ -309,6 +413,7 @@
         <div class="settings-section">
           <h3>Data Management</h3>
           <button class="btn-danger" onclick="exportData()">📥 Export Data</button>
+          <button class="btn-danger" onclick="exportLoanReport()">📥 Export Loans CSV</button>
           <button class="btn-danger" onclick="clearAllData()">🗑️ Clear All Data</button>
         </div>
       </div>
@@ -341,6 +446,76 @@
     </div>
   </div>
 
+  <!-- Loan Interest Modal -->
+  <div id="loan-interest-modal" class="modal-overlay" style="display:none;">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Record Interest Payment</h3>
+        <button type="button" class="modal-close" onclick="closeLoanInterestModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="loan-interest-bank" class="payment-person"></p>
+        <div class="form-row">
+          <label for="loan-interest-amount">Amount Paid (₹)</label>
+          <input type="number" id="loan-interest-amount" min="0.01" step="0.01" required>
+        </div>
+        <div class="form-row">
+          <label for="loan-interest-date">Payment Date</label>
+          <input type="date" id="loan-interest-date" required>
+        </div>
+        <div class="form-actions modal-actions">
+          <button type="button" class="btn-small btn-secondary" onclick="closeLoanInterestModal()">Cancel</button>
+          <button type="button" class="btn-small" onclick="submitLoanInterest()">Save Payment</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chit Payment Modal -->
+  <div id="chit-payment-modal" class="modal-overlay" style="display:none;">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Record Chit Payment</h3>
+        <button type="button" class="modal-close" onclick="closeChitPaymentModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="chit-payment-person" class="payment-person"></p>
+        <div class="form-row">
+          <label for="chit-payment-amount">AMOUNT PAID (₹)</label>
+          <input type="number" id="chit-payment-amount" min="0.01" step="0.01" required>
+        </div>
+        <div class="form-row">
+          <label for="chit-payment-date">PAYMENT DATE</label>
+          <input type="date" id="chit-payment-date" required>
+        </div>
+        <div class="form-row">
+          <label for="chit-payment-note">NOTE</label>
+          <textarea id="chit-payment-note" placeholder="e.g., Salary received, cash in hand..." rows="3"></textarea>
+        </div>
+        <div class="form-actions modal-actions">
+          <button type="button" class="btn-small btn-secondary" onclick="closeChitPaymentModal()">Cancel</button>
+          <button type="button" class="btn-small" onclick="submitChitPayment()">Save Payment</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chit Payment History Modal -->
+  <div id="chit-history-modal" class="modal-overlay" style="display:none;">
+    <div class="modal history-modal">
+      <div class="modal-header">
+        <h3 id="chit-history-title">Chit Payment History</h3>
+        <button type="button" class="modal-close" onclick="closeChitHistoryModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="chit-history-content"></div>
+        <div class="form-actions modal-actions">
+          <button type="button" class="btn-small btn-secondary" onclick="closeChitHistoryModal()">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Lending Details Modal -->
   <div id="details-modal" class="modal-overlay" style="display:none;">
     <div class="modal">
@@ -365,6 +540,7 @@
     </div>
   </div>
 
+  <script src="config.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

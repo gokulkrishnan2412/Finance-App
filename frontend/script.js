@@ -1,5 +1,30 @@
 // ============ LOCAL STORAGE & STATE ============
 let lendings = [];
+const localApiOrigin = 'http://localhost:5000';
+const sheetsApiOrigin = (window.GOOGLE_SHEETS_WEB_APP_URL || '').replace(/\/$/, '');
+const nativeFetch = window.fetch.bind(window);
+
+window.fetch = async (url, options = {}) => {
+  if (!sheetsApiOrigin || typeof url !== 'string' || !url.startsWith(localApiOrigin)) {
+    return nativeFetch(url, options);
+  }
+
+  const requestOptions = { ...options };
+  const requestUrl = `${sheetsApiOrigin}${url.slice(localApiOrigin.length)}`;
+  if (requestOptions.method && requestOptions.method.toUpperCase() === 'DELETE') {
+    requestOptions.method = 'POST';
+  }
+  if (requestOptions.body && requestOptions.headers) {
+    requestOptions.headers = { ...requestOptions.headers, 'Content-Type': 'text/plain;charset=utf-8' };
+  }
+
+  const response = await nativeFetch(requestUrl, requestOptions);
+  const data = await response.json();
+  return {
+    ok: response.ok && data.status !== 'error',
+    json: async () => data
+  };
+};
 
 // ============ PAGE NAVIGATION ============
 const menuItems = document.querySelectorAll('.menu-item');
@@ -24,6 +49,10 @@ menuItems.forEach(item => {
       loadDashboard('weekly');
     } else if (targetPage === 'dashboard-monthly') {
       loadDashboard('monthly');
+    } else if (targetPage === 'chit') {
+      loadChits();
+    } else if (targetPage === 'loans') {
+      loadLoans();
     } else if (targetPage === 'analytics') {
       loadAnalytics();
     }
@@ -118,6 +147,314 @@ document.getElementById('lending-form').addEventListener('submit', async (e) => 
     alert('Error adding lending');
   }
 });
+
+document.getElementById('loan-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const loanData = {
+    id: Date.now(),
+    bankName: document.getElementById('bank-name').value,
+    date: document.getElementById('loan-date').value,
+    loanAmount: parseFloat(document.getElementById('loan-amount').value),
+    monthlyInterest: parseFloat(document.getElementById('monthly-interest').value),
+    notes: document.getElementById('loan-notes').value
+  };
+
+  try {
+    const response = await fetch('http://localhost:5000/add_loan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(loanData)
+    });
+    if (!response.ok) {
+      const errorResult = await response.json().catch(() => ({}));
+      throw new Error(errorResult.message || `Server returned ${response.status}`);
+    }
+    document.getElementById('loan-form').reset();
+    document.getElementById('loan-date').valueAsDate = new Date();
+    alert('Loan added successfully!');
+    document.querySelector('[data-page="loans"]').click();
+  } catch (error) {
+    console.error('Error adding loan:', error);
+    alert(`Error adding loan: ${error.message}`);
+  }
+});
+
+document.getElementById('chit-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const chitData = {
+    id: Date.now(),
+    personName: document.getElementById('chit-person-name').value,
+    chitAmount: parseFloat(document.getElementById('chit-amount').value),
+    notes: document.getElementById('chit-notes').value
+  };
+
+  try {
+    const response = await fetch('http://localhost:5000/add_chit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(chitData)
+    });
+    if (!response.ok) {
+      const errorResult = await response.json().catch(() => ({}));
+      throw new Error(errorResult.message || `Server returned ${response.status}`);
+    }
+    document.getElementById('chit-form').reset();
+    alert('Chit added successfully!');
+    loadChits();
+  } catch (error) {
+    console.error('Error adding chit:', error);
+    alert(`Error adding chit: ${error.message}`);
+  }
+});
+
+// ============ CHITS ==========
+async function loadChits() {
+  try {
+    const response = await fetch('http://localhost:5000/get_chits');
+    if (!response.ok) throw new Error('Unable to load chits');
+    displayChits(await response.json());
+  } catch (error) {
+    console.error('Error loading chits:', error);
+  }
+}
+
+function displayChits(chitsData) {
+  const list = document.getElementById('chit-list');
+  let totalAmount = 0;
+  let totalPaid = 0;
+  let totalRemaining = 0;
+  list.innerHTML = '';
+
+  chitsData.sort((a, b) => Number(b.id) - Number(a.id)).forEach(chit => {
+    const amount = Number(chit.chitAmount || 0);
+    const payments = chit.payments || [];
+    const paid = payments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+    const remaining = Math.max(0, amount - paid);
+    totalAmount += amount;
+    totalPaid += paid;
+    totalRemaining += remaining;
+
+    const item = document.createElement('div');
+    item.className = 'lending-card chit-card';
+    item.innerHTML = `
+      <div class="lending-header">
+        <div class="lending-person"><span class="lending-icon">🧾</span><div>
+          <div class="lending-name">${chit.personName}</div>
+          <div class="lending-meta">CHIT RECORD</div>
+        </div></div>
+        <div class="lending-status">ACTIVE</div>
+      </div>
+      <div class="lending-amounts">
+        <div class="amount-item"><span class="amount-label">Chit Amount</span><span class="amount-value">₹${amount.toFixed(2)}</span></div>
+        <div class="amount-item"><span class="amount-label">Amount Paid</span><span class="amount-value">₹${paid.toFixed(2)}</span></div>
+        <div class="amount-item"><span class="amount-label">Remaining</span><span class="amount-value interest">₹${remaining.toFixed(2)}</span></div>
+      </div>
+      ${chit.notes ? `<p class="loan-notes">${chit.notes}</p>` : ''}
+      <div class="lending-actions">
+        <button class="btn-small btn-secondary" onclick="recordChitPayment('${chit.id}')">Record Payment</button>
+        <button class="btn-small" onclick="viewChitHistory('${chit.id}')">Payment History (${payments.length})</button>
+        <button class="btn-small btn-danger" onclick="deleteChit('${chit.id}')">Delete</button>
+      </div>`;
+    list.appendChild(item);
+  });
+
+  if (chitsData.length === 0) {
+    list.innerHTML = '<p style="text-align: center; color: #999;">No chits yet. Add one above to get started!</p>';
+  }
+  document.getElementById('chit-total-amount').textContent = totalAmount.toFixed(2);
+  document.getElementById('chit-total-paid').textContent = totalPaid.toFixed(2);
+  document.getElementById('chit-total-remaining').textContent = totalRemaining.toFixed(2);
+}
+
+function recordChitPayment(chitId) {
+  fetch('http://localhost:5000/get_chits').then(response => response.json()).then(chitsData => {
+    const chit = chitsData.find(item => String(item.id) === String(chitId));
+    if (!chit) return;
+    document.getElementById('chit-payment-person').textContent = chit.personName;
+    document.getElementById('chit-payment-amount').value = '';
+    document.getElementById('chit-payment-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('chit-payment-note').value = '';
+    const modal = document.getElementById('chit-payment-modal');
+    modal.dataset.chitId = chitId;
+    modal.style.display = 'flex';
+    document.getElementById('chit-payment-amount').focus();
+  });
+}
+
+function closeChitPaymentModal() {
+  document.getElementById('chit-payment-modal').style.display = 'none';
+}
+
+function submitChitPayment() {
+  const modal = document.getElementById('chit-payment-modal');
+  const amount = parseFloat(document.getElementById('chit-payment-amount').value);
+  const date = document.getElementById('chit-payment-date').value;
+  const note = document.getElementById('chit-payment-note').value.trim();
+  if (!amount || amount <= 0 || !date) {
+    alert('Enter a valid amount and date');
+    return;
+  }
+  fetch(`http://localhost:5000/record_chit_payment/${modal.dataset.chitId}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ amount, date, note })
+  }).then(response => response.json()).then(result => {
+    if (result.status !== 'success') throw new Error(result.message);
+    closeChitPaymentModal();
+    loadChits();
+  }).catch(error => alert(`Error recording chit payment: ${error.message}`));
+}
+
+async function viewChitHistory(chitId) {
+  const response = await fetch('http://localhost:5000/get_chits');
+  const chit = (await response.json()).find(item => String(item.id) === String(chitId));
+  const payments = chit ? chit.payments || [] : [];
+  document.getElementById('chit-history-title').textContent = `${chit ? chit.personName : 'Chit'} Payment History`;
+  const historyContent = document.getElementById('chit-history-content');
+  if (payments.length === 0) {
+    historyContent.innerHTML = '<p style="text-align: center; color: #999;">No chit payments recorded yet.</p>';
+  } else {
+    const totalPaid = payments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+    historyContent.innerHTML = `
+      <table class="payments-table">
+        <thead><tr><th>Date</th><th>Amount</th><th>Note</th></tr></thead>
+        <tbody>
+          ${payments.slice().reverse().map(payment => `
+            <tr><td>${formatDate(payment.date)}</td><td>₹${Number(payment.amount || 0).toFixed(2)}</td><td>${escapeHtml(payment.note || '—')}</td></tr>
+          `).join('')}
+          <tr class="payments-total-row"><td><strong>Total Paid</strong></td><td><strong>₹${totalPaid.toFixed(2)}</strong></td><td></td></tr>
+        </tbody>
+      </table>`;
+  }
+  document.getElementById('chit-history-modal').style.display = 'flex';
+}
+
+function closeChitHistoryModal() {
+  document.getElementById('chit-history-modal').style.display = 'none';
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>'"]/g, character => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+  }[character]));
+}
+
+async function deleteChit(chitId) {
+  if (!confirm('Delete this chit record?')) return;
+  const response = await fetch(`http://localhost:5000/delete_chit/${chitId}`, { method: 'DELETE' });
+  if (response.ok) loadChits();
+  else alert('Error deleting chit');
+}
+
+// ============ LOANS ==========
+async function loadLoans() {
+  try {
+    const response = await fetch('http://localhost:5000/get_loans');
+    if (!response.ok) throw new Error('Unable to load loans');
+    displayLoans(await response.json());
+  } catch (error) {
+    console.error('Error loading loans:', error);
+  }
+}
+
+function displayLoans(loansData) {
+  const list = document.getElementById('loans-list');
+  let totalAmount = 0;
+  let pendingInterest = 0;
+  let interestPaid = 0;
+  list.innerHTML = '';
+
+  loansData.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(loan => {
+    const payments = loan.interestPayments || [];
+    const paid = payments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    const paidThisMonth = payments
+      .filter(payment => String(payment.date || '').slice(0, 7) === currentMonth)
+      .reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+    const pending = Math.max(0, Number(loan.monthlyInterest || 0) - paidThisMonth);
+    totalAmount += Number(loan.loanAmount || 0);
+    pendingInterest += pending;
+    interestPaid += paid;
+
+    const item = document.createElement('div');
+    item.className = 'lending-card loan-card';
+    item.innerHTML = `
+      <div class="lending-header">
+        <div class="lending-person"><span class="lending-icon">🏦</span><div>
+          <div class="lending-name">${loan.bankName}</div>
+          <div class="lending-meta">LOAN DATE • ${formatDate(loan.date)}</div>
+        </div></div>
+        <div class="lending-status">ACTIVE</div>
+      </div>
+      <div class="lending-amounts">
+        <div class="amount-item"><span class="amount-label">Principal</span><span class="amount-value">₹${Number(loan.loanAmount || 0).toFixed(2)}</span></div>
+        <div class="amount-item"><span class="amount-label">Pending This Month</span><span class="amount-value interest">₹${pending.toFixed(2)}</span></div>
+        <div class="amount-item"><span class="amount-label">Interest Paid</span><span class="amount-value">₹${paid.toFixed(2)}</span></div>
+      </div>
+      ${loan.notes ? `<p class="loan-notes">${loan.notes}</p>` : ''}
+      <div class="lending-actions">
+        <button class="btn-small btn-secondary" onclick="recordLoanInterest('${loan.id}')">Record Interest</button>
+        <button class="btn-small" onclick="viewLoanHistory('${loan.id}')">Payment History (${payments.length})</button>
+        <button class="btn-small btn-danger" onclick="deleteLoan('${loan.id}')">Delete</button>
+      </div>`;
+    list.appendChild(item);
+  });
+
+  if (loansData.length === 0) {
+    list.innerHTML = '<p style="text-align: center; color: #999;">No bank loans yet. Add one above to get started!</p>';
+  }
+  document.getElementById('loans-total-amount').textContent = totalAmount.toFixed(2);
+  document.getElementById('loans-pending-interest').textContent = pendingInterest.toFixed(2);
+  document.getElementById('loans-interest-paid').textContent = interestPaid.toFixed(2);
+}
+
+function recordLoanInterest(loanId) {
+  fetch('http://localhost:5000/get_loans').then(response => response.json()).then(loansData => {
+    const loan = loansData.find(item => String(item.id) === String(loanId));
+    if (!loan) return;
+    document.getElementById('loan-interest-bank').textContent = loan.bankName;
+    document.getElementById('loan-interest-amount').value = Number(loan.monthlyInterest || 0).toFixed(2);
+    document.getElementById('loan-interest-date').value = new Date().toISOString().split('T')[0];
+    const modal = document.getElementById('loan-interest-modal');
+    modal.dataset.loanId = loanId;
+    modal.style.display = 'flex';
+  });
+}
+
+function closeLoanInterestModal() {
+  document.getElementById('loan-interest-modal').style.display = 'none';
+}
+
+function submitLoanInterest() {
+  const modal = document.getElementById('loan-interest-modal');
+  const amount = parseFloat(document.getElementById('loan-interest-amount').value);
+  const date = document.getElementById('loan-interest-date').value;
+  if (!amount || amount <= 0 || !date) {
+    alert('Enter a valid amount and date');
+    return;
+  }
+  fetch(`http://localhost:5000/record_loan_interest/${modal.dataset.loanId}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ amount, date })
+  }).then(response => response.json()).then(result => {
+    if (result.status !== 'success') throw new Error(result.message);
+    closeLoanInterestModal();
+    loadLoans();
+  }).catch(error => alert(`Error recording interest: ${error.message}`));
+}
+
+async function viewLoanHistory(loanId) {
+  const response = await fetch('http://localhost:5000/get_loans');
+  const loan = (await response.json()).find(item => String(item.id) === String(loanId));
+  const payments = loan ? loan.interestPayments || [] : [];
+  alert(payments.length ? payments.map(payment => `${formatDate(payment.date)}: ₹${Number(payment.amount).toFixed(2)}`).join('\n') : 'No interest payments recorded yet.');
+}
+
+async function deleteLoan(loanId) {
+  if (!confirm('Delete this loan and its interest payment history?')) return;
+  const response = await fetch(`http://localhost:5000/delete_loan/${loanId}`, { method: 'DELETE' });
+  if (response.ok) loadLoans();
+  else alert('Error deleting loan');
+}
 
 // ============ GENERATE SCHEDULES ============
 function generateWeeklySchedule(weeks, weeklyAmount, startDate) {
@@ -512,8 +849,17 @@ function submitPayment() {
 document.getElementById('payment-modal').addEventListener('click', (e) => {
   if (e.target.id === 'payment-modal') closePaymentModal();
 });
+document.getElementById('loan-interest-modal').addEventListener('click', (e) => {
+  if (e.target.id === 'loan-interest-modal') closeLoanInterestModal();
+});
+document.getElementById('chit-payment-modal').addEventListener('click', (e) => {
+  if (e.target.id === 'chit-payment-modal') closeChitPaymentModal();
+});
+document.getElementById('chit-history-modal').addEventListener('click', (e) => {
+  if (e.target.id === 'chit-history-modal') closeChitHistoryModal();
+});
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') { closePaymentModal(); closeDetailsModal(); }
+  if (e.key === 'Escape') { closePaymentModal(); closeLoanInterestModal(); closeChitPaymentModal(); closeChitHistoryModal(); closeDetailsModal(); }
 });
 document.getElementById('details-modal').addEventListener('click', (e) => {
   if (e.target.id === 'details-modal') closeDetailsModal();
@@ -542,19 +888,65 @@ async function deleteLending(lendingId) {
 }
 
 // ============ EXPORT & CLEAR DATA ============
-function exportData() {
-  fetch('http://localhost:5000/get_lendings')
-    .then(res => res.json())
-    .then(data => {
-      const dataStr = JSON.stringify(data, null, 2);
-      const dataBlob = new Blob([dataStr], { type: 'application/json' });
-      const url = URL.createObjectURL(dataBlob);
+async function exportData() {
+  try {
+    const response = await fetch('http://localhost:5000/get_lendings');
+    const lendingsData = await response.json();
+    const rows = [['Report Section', 'Person', 'Date', 'Type', 'Principal', 'Return Amount', 'Interest', 'Received', 'Outstanding', 'Notes']];
+    ['daily', 'weekly', 'monthly'].forEach(type => {
+      rows.push([`${type.toUpperCase()} LENDINGS`]);
+      lendingsData
+        .filter(lending => lending.type === type)
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .forEach(lending => rows.push([
+          type.toUpperCase(), lending.name, lending.date, lending.type,
+          lending.principalAmount, lending.returnAmount, lending.interestAmount,
+          lending.received || 0,
+          Math.max(0, Number(lending.returnAmount || 0) - Number(lending.received || 0)),
+          lending.notes || ''
+        ]));
+    });
+    const csv = rows.map(row => row.map(value => `"${String(value ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `lendings_report_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('Error exporting lending report:', error);
+    alert('Error exporting lending report');
+  }
+}
+
+  async function exportLoanReport() {
+    try {
+      const response = await fetch('http://localhost:5000/get_loans');
+      const loansData = await response.json();
+      const rows = [['Bank Name', 'Loan Date', 'Loan Amount', 'Monthly Interest', 'Interest Paid Date', 'Interest Paid', 'Notes']];
+      loansData.forEach(loan => {
+        const payments = loan.interestPayments || [];
+        if (payments.length === 0) {
+          rows.push([loan.bankName, loan.date, loan.loanAmount, loan.monthlyInterest, '', '', loan.notes || '']);
+        } else {
+          payments.forEach(payment => rows.push([
+            loan.bankName, loan.date, loan.loanAmount, loan.monthlyInterest,
+            payment.date, payment.amount, loan.notes || ''
+          ]));
+        }
+      });
+      const csv = rows.map(row => row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(',')).join('\n');
+      const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
       const link = document.createElement('a');
       link.href = url;
-      link.download = `lendings_${new Date().toISOString().split('T')[0]}.json`;
+      link.download = `loans_${new Date().toISOString().split('T')[0]}.csv`;
       link.click();
-    });
-}
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error exporting loans:', error);
+      alert('Error exporting loan report');
+    }
+  }
 
 function clearAllData() {
   if (confirm('Are you sure? This will delete ALL data and cannot be undone!')) {
@@ -581,9 +973,12 @@ function formatDate(dateString) {
 // ============ INITIALIZATION ============
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('lending-date').valueAsDate = new Date();
+  document.getElementById('loan-date').valueAsDate = new Date();
   // Load all dashboards and analytics on page load
   loadDashboard('daily');
   loadDashboard('weekly');
   loadDashboard('monthly');
+  loadChits();
+  loadLoans();
   loadAnalytics();
 });

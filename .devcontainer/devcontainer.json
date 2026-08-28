@@ -1,6 +1,6 @@
 {
     "name": "Finance-App Dev Container",
-    "image": "mcr.microsoft.com/devcontainers/python:3.11", 
+    "image": "mcr.microsoft.com/devcontainers/python:3.11",
     "features": {
       "ghcr.io/devcontainers/features/node:1": {
         "version": "18"
@@ -18,7 +18,9 @@
         ]
       }
     },
-    "forwardPorts": [3000],
-    "remoteUser": "vscode"
+    "forwardPorts": [5000],
+    "remoteUser": "vscode",
+    "portsAttributes": {
+      "5000": { "label": "Flask App", "onAutoForward": "openBrowser" }
+    }
   }
-  

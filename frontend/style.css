@@ -445,6 +445,23 @@ body {
   color: var(--text-primary);
 }
 
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.section-heading h2 {
+  margin-bottom: 0;
+}
+
+.loan-notes {
+  color: var(--text-light);
+  margin-bottom: 1.25rem;
+}
+
 .lendings-list {
   display: flex;
   flex-direction: column;
@@ -766,6 +783,11 @@ body {
 
 /* ============ RESPONSIVE ============ */
 @media (max-width: 768px) {
+  .section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .lending-header {
     flex-direction: column;
     align-items: flex-start;
@@ -818,6 +840,14 @@ body {
   max-width: 420px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
   animation: modal-in 0.2s ease-out;
+}
+
+.history-modal {
+  max-width: 680px;
+}
+
+.history-modal .modal-body {
+  overflow-x: auto;
 }
 
 @keyframes modal-in {
