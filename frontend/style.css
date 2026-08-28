@@ -906,7 +906,98 @@ body.mobile-mode .container {
 }
 
 body.desktop-mode .container {
-  min-width: 900px;
+  min-width: 0;
+}
+
+/* The toggle can preview either layout regardless of the browser width. */
+body.mobile-mode .container {
+  display: block;
+  height: auto;
+  min-height: 100vh;
+}
+
+body.mobile-mode .sidebar {
+  width: 100%;
+  min-height: auto;
+  padding: 1.25rem 1rem;
+}
+
+body.mobile-mode .sidebar-header {
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+}
+
+body.mobile-mode .sidebar-menu {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+body.mobile-mode .menu-section-title {
+  grid-column: 1 / -1;
+  margin-top: 0.25rem;
+}
+
+body.mobile-mode .menu-item {
+  padding: 0.75rem;
+  font-size: 0.9rem;
+}
+
+body.mobile-mode .main-content {
+  padding: 1.25rem 1rem;
+}
+
+body.mobile-mode .lending-header {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+body.mobile-mode .lending-amounts {
+  grid-template-columns: 1fr;
+}
+
+body.mobile-mode .lending-actions {
+  width: 100%;
+}
+
+body.mobile-mode .btn-small {
+  flex: 1;
+  min-width: 100px;
+}
+
+body.desktop-mode .container {
+  display: flex;
+  height: 100vh;
+  max-width: none;
+  margin: 0;
+}
+
+body.desktop-mode .sidebar {
+  width: 300px;
+  min-height: 100vh;
+  padding: 2rem 1.5rem;
+}
+
+body.desktop-mode .sidebar-header {
+  margin-bottom: 3rem;
+  padding-bottom: 1.5rem;
+}
+
+body.desktop-mode .sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+body.desktop-mode .menu-section-title {
+  grid-column: auto;
+  margin-top: 0.5rem;
+}
+
+body.desktop-mode .menu-item {
+  padding: 1rem 1.25rem;
+  font-size: 1rem;
 }
 /* ============ PAYMENT MODAL ============ */
 .modal-overlay {

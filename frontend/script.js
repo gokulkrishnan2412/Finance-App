@@ -4,9 +4,9 @@ const localApiOrigin = 'http://localhost:5000';
 const sheetsApiOrigin = (window.GOOGLE_SHEETS_WEB_APP_URL || '').replace(/\/$/, '');
 const nativeFetch = window.fetch.bind(window);
 
-// Keep the selected layout when the page is reopened.
-const savedDeviceMode = localStorage.getItem('finance-app-device-mode');
-document.body.classList.add(savedDeviceMode || (window.matchMedia('(max-width: 768px)').matches ? 'mobile-mode' : 'desktop-mode'));
+// Start with the layout that matches the actual device width.
+const deviceMode = window.matchMedia('(max-width: 768px)').matches ? 'mobile-mode' : 'desktop-mode';
+document.body.classList.add(deviceMode);
 
 window.fetch = async (url, options = {}) => {
   if (!sheetsApiOrigin || typeof url !== 'string' || !url.startsWith(localApiOrigin)) {
@@ -40,7 +40,6 @@ function updateDeviceToggle() {
 document.getElementById('device-toggle').addEventListener('click', () => {
   const isMobile = document.body.classList.toggle('mobile-mode');
   document.body.classList.toggle('desktop-mode', !isMobile);
-  localStorage.setItem('finance-app-device-mode', isMobile ? 'mobile-mode' : 'desktop-mode');
   updateDeviceToggle();
 });
 updateDeviceToggle();
