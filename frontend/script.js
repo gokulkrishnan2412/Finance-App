@@ -32,9 +32,11 @@ window.fetch = async (url, options = {}) => {
 
 function updateDeviceToggle() {
   const isMobile = document.body.classList.contains('mobile-mode');
-  document.getElementById('device-toggle-icon').textContent = isMobile ? '▣' : '▯';
-  document.getElementById('device-toggle-label').textContent = isMobile ? 'Mobile view' : 'Desktop view';
+  document.getElementById('device-toggle-label').textContent = isMobile ? 'Mobile' : 'Desktop';
   document.getElementById('device-toggle').setAttribute('aria-label', `Switch to ${isMobile ? 'desktop' : 'mobile'} view`);
+  document.querySelectorAll('.device-option').forEach(option => {
+    option.classList.toggle('selected', option.dataset.device === (isMobile ? 'mobile' : 'desktop'));
+  });
 }
 
 document.getElementById('device-toggle').addEventListener('click', () => {

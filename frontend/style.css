@@ -118,9 +118,10 @@ body {
 }
 
 .device-toolbar {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 1rem;
+  position: fixed;
+  top: 1rem;
+  right: 1.25rem;
+  z-index: 1200;
 }
 
 .device-toggle {
@@ -135,6 +136,23 @@ body {
   cursor: pointer;
   font-size: 0.85rem;
   font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.device-option {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  color: var(--text-light);
+  font-size: 1.1rem;
+}
+
+.device-option.selected {
+  background: var(--accent-color);
+  color: var(--primary-dark);
 }
 
 .device-toggle:hover {
@@ -999,6 +1017,95 @@ body.desktop-mode .menu-item {
   padding: 1rem 1.25rem;
   font-size: 1rem;
 }
+
+/* Mobile navigation stays at the bottom, like a native app toolbar. */
+body.mobile-mode .sidebar {
+  position: fixed;
+  top: auto !important;
+  left: 50%;
+  bottom: 0;
+  z-index: 900;
+  transform: translateX(-50%);
+  width: min(100%, 430px);
+  padding: 0.45rem 0.35rem calc(0.45rem + env(safe-area-inset-bottom));
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 -5px 18px rgba(40, 20, 10, 0.2);
+}
+
+body.mobile-mode .sidebar-header {
+  display: none;
+}
+
+body.mobile-mode .sidebar-menu {
+  display: flex;
+  flex-direction: row !important;
+  align-items: stretch;
+  gap: 0.15rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+body.mobile-mode .sidebar-menu::-webkit-scrollbar {
+  display: none;
+}
+
+body.mobile-mode .menu-section-title {
+  display: none;
+}
+
+body.mobile-mode .menu-item {
+  flex: 0 0 76px;
+  min-height: 58px;
+  padding: 0.35rem 0.2rem;
+  border-radius: 0.6rem;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.15rem;
+  text-align: center;
+  font-size: 0.68rem;
+  line-height: 1.1;
+  white-space: normal;
+}
+
+body.mobile-mode .menu-icon {
+  font-size: 1.2rem;
+}
+
+body.mobile-mode .main-content {
+  min-height: 100vh;
+  padding-bottom: 6.5rem;
+}
+
+body.mobile-mode .device-toolbar {
+  top: 0.75rem;
+  right: 0.75rem;
+}
+
+body.mobile-mode .device-toggle {
+  min-width: 78px;
+  height: 40px;
+  justify-content: center;
+  padding: 0.25rem 0.35rem;
+  border-radius: 1.25rem;
+}
+
+body.mobile-mode #device-toggle-label {
+  display: inline;
+  font-size: 0.75rem;
+}
+
+body.mobile-mode .device-option {
+  font-size: 1.15rem;
+}
+
+@media (min-width: 769px) {
+  body.mobile-mode .main-content {
+    max-width: 430px;
+    margin: 0 auto;
+  }
+}
+
 /* ============ PAYMENT MODAL ============ */
 .modal-overlay {
   position: fixed;
