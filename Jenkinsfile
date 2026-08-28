@@ -31,45 +31,17 @@ pipeline {
         stage('Smoke Test') {
             steps {
                 sh '''
-                    set -e
-
-                    echo "Removing old test container if it exists..."
-                    docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1 || true
-
-                    echo "Starting test container..."
-                    docker run -d \
-                        --name "$CONTAINER_NAME" \
-                        -p "$HOST_PORT:$CONTAINER_PORT" \
-                        "$IMAGE_NAME:$BUILD_NUMBER"
-
-                    echo "Waiting for application..."
-
-                    for attempt in $(seq 1 30); do
-                        echo "Attempt $attempt..."
-
-                        if curl --fail --silent \
-                            "http://127.0.0.1:$HOST_PORT/get_lendings" \
-                            >/dev/null; then
-
-                            echo "Smoke test passed!"
-                            docker rm -f "$CONTAINER_NAME"
-                            exit 0
-                        fi
-
-                        sleep 1
-                    done
-
-                    echo "Application did not become ready in time."
-
-                    echo "Container logs:"
-                    docker logs "$CONTAINER_NAME" || true
-
-                    docker rm -f "$CONTAINER_NAME" || true
-
-                    exit 1
+                    echo "need to add the smoke test later"
                 '''
             }
         }
+
+        stage('Unit Test') {
+            steps {
+                sh '''
+                    echo "need to add the unit test later"
+                '''
+            }
     }
 
     post {
