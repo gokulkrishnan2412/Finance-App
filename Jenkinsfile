@@ -42,6 +42,7 @@ pipeline {
                     echo "need to add the unit test later"
                 '''
             }
+        }
     }
 
     post {
