@@ -19,14 +19,14 @@ pipeline {
             }
         }
 
-        stage('Build Image') {
+        /*stage('Build Image') {
             steps {
                 sh '''
                     echo "Building Docker image..."
                     docker build -t "$IMAGE_NAME:$BUILD_NUMBER" .
                 '''
             }
-        }
+        }*/
 
         stage('Smoke Test') {
             steps {
