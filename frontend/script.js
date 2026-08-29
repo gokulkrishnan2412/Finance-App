@@ -19,6 +19,15 @@ window.fetch = async (url, options = {}) => {
     return nativeFetch(url, options);
   }
 
+  if (!sheetsApiOrigin) {
+    return {
+      ok: false,
+      status: 0,
+      json: async () => ({ status: 'error', message: 'Google Sheets API URL not configured in config.js' }),
+      text: async () => 'API URL not configured'
+    };
+  }
+
   const requestOptions = { ...options };
   const localPath = url.slice(localApiOrigin.length).replace(/^\/+|\/+$/g, '');
   const pathParts = localPath.split('/').filter(Boolean);
@@ -39,22 +48,33 @@ window.fetch = async (url, options = {}) => {
     requestOptions.headers = { ...(requestOptions.headers || {}), 'Content-Type': 'application/json' };
   }
 
-  const response = await nativeFetch(requestUrl, requestOptions);
-  const responseText = await response.text();
-  let data = {};
-
   try {
-    data = responseText ? JSON.parse(responseText) : {};
-  } catch (error) {
-    data = { status: 'error', message: responseText || `Request failed with status ${response.status}` };
-  }
+    const response = await nativeFetch(requestUrl, requestOptions);
+    const responseText = await response.text();
+    let data = {};
 
-  return {
-    ok: response.ok && data.status !== 'error',
-    status: response.status,
-    json: async () => data,
-    text: async () => responseText
-  };
+    try {
+      data = responseText ? JSON.parse(responseText) : {};
+    } catch (parseError) {
+      console.error('Failed to parse Apps Script response:', responseText);
+      data = { status: 'error', message: `Invalid response from server: ${responseText.substring(0, 100)}` };
+    }
+
+    return {
+      ok: response.ok && data.status !== 'error',
+      status: response.status,
+      json: async () => data,
+      text: async () => responseText
+    };
+  } catch (fetchError) {
+    console.error('Fetch error:', fetchError);
+    return {
+      ok: false,
+      status: 0,
+      json: async () => ({ status: 'error', message: `Network error: ${fetchError.message}` }),
+      text: async () => fetchError.message
+    };
+  }
 };
 
 function apiFetch(path, options = {}) {
@@ -1014,6 +1034,32 @@ function clearAllData() {
   }
 }
 
+async function testApiConnection() {
+  const statusEl = document.getElementById('api-status');
+  statusEl.textContent = 'Testing connection...';
+  statusEl.style.color = '#0066cc';
+
+  try {
+    const response = await apiFetch('/get_lendings');
+    const data = await response.json();
+    
+    if (response.ok) {
+      statusEl.textContent = '✅ API Connection: SUCCESS - Backend is working!';
+      statusEl.style.color = '#28a745';
+    } else if (data.message) {
+      statusEl.textContent = `❌ API Error: ${data.message}`;
+      statusEl.style.color = '#dc3545';
+    } else {
+      statusEl.textContent = '❌ API Connection: FAILED - Server returned an error';
+      statusEl.style.color = '#dc3545';
+    }
+  } catch (error) {
+    statusEl.textContent = `❌ Connection Error: ${error.message}`;
+    statusEl.style.color = '#dc3545';
+    console.error('Connection test error:', error);
+  }
+}
+
 // ============ HELPER FUNCTIONS ============
 function formatDate(dateString) {
   const date = new Date(dateString);
@@ -1025,6 +1071,16 @@ function formatDate(dateString) {
 
 // ============ INITIALIZATION ============
 document.addEventListener('DOMContentLoaded', () => {
+  // Show API status
+  const statusEl = document.getElementById('api-status');
+  if (useLocalApi) {
+    statusEl.textContent = '📌 Using LOCAL API (localhost:5000)';
+    statusEl.style.color = '#0066cc';
+  } else {
+    statusEl.textContent = `📌 Using GOOGLE SHEETS API - ${sheetsApiOrigin.substring(0, 40)}...`;
+    statusEl.style.color = '#0066cc';
+  }
+
   document.getElementById('lending-date').valueAsDate = new Date();
   document.getElementById('loan-date').valueAsDate = new Date();
   // Load all dashboards and analytics on page load
