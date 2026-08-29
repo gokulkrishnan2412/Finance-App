@@ -8,8 +8,13 @@
     "interestAmount": 6000,
     "type": "monthly",
     "notes": "",
-    "received": 0,
-    "payments": [],
+    "received": 6000,
+    "payments": [
+      {
+        "date": "2026-08-18",
+        "amount": 6000
+      }
+    ],
     "status": "active",
     "createdAt": "2026-08-29T15:32:08.422Z",
     "duration": 12,
@@ -21,7 +26,7 @@
         "dueDate": "2026-07-18",
         "received": false,
         "receivedDate": null,
-        "receivedAmount": 0
+        "receivedAmount": 6000
       },
       {
         "month": 2,
