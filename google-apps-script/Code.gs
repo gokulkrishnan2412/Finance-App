@@ -23,7 +23,14 @@ function route(event, method) {
     const rawBody = method === 'POST' && event.postData && event.postData.contents ? event.postData.contents : '';
     let payload = event.parameter || {};
 
-    if (rawBody) {
+    // Handle data from query parameters (when frontend converts POST to GET to avoid CORS)
+    if (event.parameter.data) {
+      try {
+        payload = JSON.parse(event.parameter.data);
+      } catch (e) {
+        payload = Object.assign({}, event.parameter || {});
+      }
+    } else if (rawBody) {
       try {
         payload = JSON.parse(rawBody);
       } catch (error) {

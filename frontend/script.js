@@ -38,18 +38,33 @@ window.fetch = async (url, options = {}) => {
   if (action) params.set('action', action);
   if (id) params.set('id', id);
 
-  const requestUrl = `${sheetsApiOrigin}${sheetsApiOrigin.includes('?') ? '&' : '?'}${params.toString()}`;
-
-  if (requestOptions.method && requestOptions.method.toUpperCase() === 'DELETE') {
-    requestOptions.method = 'POST';
+  // If there's a POST body, add it to query params to avoid CORS preflight
+  if (requestOptions.body && requestOptions.method?.toUpperCase() === 'POST') {
+    try {
+      const bodyData = JSON.parse(requestOptions.body);
+      params.set('data', JSON.stringify(bodyData));
+    } catch (e) {
+      // If body is not JSON, send it as-is
+    }
   }
 
-  if (requestOptions.body && !requestOptions.headers?.['Content-Type'] && !requestOptions.headers?.['content-type']) {
-    requestOptions.headers = { ...(requestOptions.headers || {}), 'Content-Type': 'application/json' };
+  let requestUrl = `${sheetsApiOrigin}${sheetsApiOrigin.includes('?') ? '&' : '?'}${params.toString()}`;
+
+  // For POST requests to Apps Script, use GET to avoid CORS preflight issues
+  const finalOptions = { ...requestOptions };
+  if (requestOptions.method?.toUpperCase() === 'POST') {
+    finalOptions.method = 'GET';
+    delete finalOptions.body;
+    delete finalOptions.headers?.['Content-Type'];
+  }
+
+  if (requestOptions.method?.toUpperCase() === 'DELETE') {
+    finalOptions.method = 'GET';
+    delete finalOptions.body;
   }
 
   try {
-    const response = await nativeFetch(requestUrl, requestOptions);
+    const response = await nativeFetch(requestUrl, finalOptions);
     const responseText = await response.text();
     let data = {};
 
