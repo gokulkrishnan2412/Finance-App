@@ -3,18 +3,33 @@ let lendings = [];
 const localApiOrigin = 'http://localhost:5000';
 const sheetsApiOrigin = (window.GOOGLE_SHEETS_WEB_APP_URL || '').replace(/\/$/, '');
 const nativeFetch = window.fetch.bind(window);
+const isLocalHost = ['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname);
+const useLocalApi = isLocalHost || !sheetsApiOrigin;
 
 // Start with the layout that matches the actual device width.
 const deviceMode = window.matchMedia('(max-width: 768px)').matches ? 'mobile-mode' : 'desktop-mode';
 document.body.classList.add(deviceMode);
 
 window.fetch = async (url, options = {}) => {
-  if (!sheetsApiOrigin || typeof url !== 'string' || !url.startsWith(localApiOrigin)) {
+  if (typeof url !== 'string' || !url.startsWith(localApiOrigin)) {
+    return nativeFetch(url, options);
+  }
+
+  if (useLocalApi) {
     return nativeFetch(url, options);
   }
 
   const requestOptions = { ...options };
-  const requestUrl = `${sheetsApiOrigin}${url.slice(localApiOrigin.length)}`;
+  const localPath = url.slice(localApiOrigin.length).replace(/^\/+|\/+$/g, '');
+  const pathParts = localPath.split('/').filter(Boolean);
+  const action = pathParts[0] || '';
+  const id = pathParts.length > 1 ? pathParts[1] : '';
+
+  const params = new URLSearchParams();
+  if (action) params.set('action', action);
+  if (id) params.set('id', id);
+
+  const requestUrl = `${sheetsApiOrigin}${sheetsApiOrigin.includes('?') ? '&' : '?'}${params.toString()}`;
 
   if (requestOptions.method && requestOptions.method.toUpperCase() === 'DELETE') {
     requestOptions.method = 'POST';
@@ -41,6 +56,11 @@ window.fetch = async (url, options = {}) => {
     text: async () => responseText
   };
 };
+
+function apiFetch(path, options = {}) {
+  const absolutePath = path.startsWith('http') ? path : `${localApiOrigin}${path.startsWith('/') ? path : `/${path}`}`;
+  return fetch(absolutePath, options);
+}
 
 function updateDeviceToggle() {
   const isMobile = document.body.classList.contains('mobile-mode');
@@ -156,27 +176,28 @@ document.getElementById('lending-form').addEventListener('submit', async (e) => 
   }
 
   try {
-    const response = await fetch('http://localhost:5000/add_lending', {
+    const response = await apiFetch('/add_lending', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(lendingData)
     });
 
-    if (response.ok) {
-      document.getElementById('lending-form').reset();
-      document.getElementById('lending-date').valueAsDate = new Date();
-      updateLendingTypeFields();
-      alert('Lending added successfully!');
-
-      // Redirect to appropriate dashboard based on lending type
-      const dashboardPage = `dashboard-${lendingType}`;
-      document.querySelector(`[data-page="${dashboardPage}"]`).click();
-    } else {
-      alert('Error adding lending');
+    if (!response.ok) {
+      const errorResult = await response.json().catch(() => ({}));
+      throw new Error(errorResult.message || `Server returned ${response.status}`);
     }
+
+    document.getElementById('lending-form').reset();
+    document.getElementById('lending-date').valueAsDate = new Date();
+    updateLendingTypeFields();
+    alert('Lending added successfully!');
+
+    // Redirect to appropriate dashboard based on lending type
+    const dashboardPage = `dashboard-${lendingType}`;
+    document.querySelector(`[data-page="${dashboardPage}"]`).click();
   } catch (error) {
-    console.error('Error:', error);
-    alert('Error adding lending');
+    console.error('Error adding lending:', error);
+    alert(`Error adding lending: ${error.message}`);
   }
 });
 
@@ -192,7 +213,7 @@ document.getElementById('loan-form').addEventListener('submit', async (e) => {
   };
 
   try {
-    const response = await fetch('http://localhost:5000/add_loan', {
+    const response = await apiFetch('/add_loan', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(loanData)
@@ -221,7 +242,7 @@ document.getElementById('chit-form').addEventListener('submit', async (e) => {
   };
 
   try {
-    const response = await fetch('http://localhost:5000/add_chit', {
+    const response = await apiFetch('/add_chit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(chitData)
@@ -242,7 +263,7 @@ document.getElementById('chit-form').addEventListener('submit', async (e) => {
 // ============ CHITS ==========
 async function loadChits() {
   try {
-    const response = await fetch('http://localhost:5000/get_chits');
+    const response = await apiFetch('/get_chits');
     if (!response.ok) throw new Error('Unable to load chits');
     displayChits(await response.json());
   } catch (error) {
@@ -299,7 +320,7 @@ function displayChits(chitsData) {
 }
 
 function recordChitPayment(chitId) {
-  fetch('http://localhost:5000/get_chits').then(response => response.json()).then(chitsData => {
+  apiFetch('/get_chits').then(response => response.json()).then(chitsData => {
     const chit = chitsData.find(item => String(item.id) === String(chitId));
     if (!chit) return;
     document.getElementById('chit-payment-person').textContent = chit.personName;
@@ -326,7 +347,7 @@ function submitChitPayment() {
     alert('Enter a valid amount and date');
     return;
   }
-  fetch(`http://localhost:5000/record_chit_payment/${modal.dataset.chitId}`, {
+  apiFetch(`/record_chit_payment/${modal.dataset.chitId}`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ amount, date, note })
   }).then(response => response.json()).then(result => {
@@ -337,7 +358,7 @@ function submitChitPayment() {
 }
 
 async function viewChitHistory(chitId) {
-  const response = await fetch('http://localhost:5000/get_chits');
+  const response = await apiFetch('/get_chits');
   const chit = (await response.json()).find(item => String(item.id) === String(chitId));
   const payments = chit ? chit.payments || [] : [];
   document.getElementById('chit-history-title').textContent = `${chit ? chit.personName : 'Chit'} Payment History`;
@@ -372,7 +393,7 @@ function escapeHtml(value) {
 
 async function deleteChit(chitId) {
   if (!confirm('Delete this chit record?')) return;
-  const response = await fetch(`http://localhost:5000/delete_chit/${chitId}`, { method: 'DELETE' });
+  const response = await apiFetch(`/delete_chit/${chitId}`, { method: 'DELETE' });
   if (response.ok) loadChits();
   else alert('Error deleting chit');
 }
@@ -380,7 +401,7 @@ async function deleteChit(chitId) {
 // ============ LOANS ==========
 async function loadLoans() {
   try {
-    const response = await fetch('http://localhost:5000/get_loans');
+    const response = await apiFetch('/get_loans');
     if (!response.ok) throw new Error('Unable to load loans');
     displayLoans(await response.json());
   } catch (error) {
@@ -440,7 +461,7 @@ function displayLoans(loansData) {
 }
 
 function recordLoanInterest(loanId) {
-  fetch('http://localhost:5000/get_loans').then(response => response.json()).then(loansData => {
+  apiFetch('/get_loans').then(response => response.json()).then(loansData => {
     const loan = loansData.find(item => String(item.id) === String(loanId));
     if (!loan) return;
     document.getElementById('loan-interest-bank').textContent = loan.bankName;
@@ -464,7 +485,7 @@ function submitLoanInterest() {
     alert('Enter a valid amount and date');
     return;
   }
-  fetch(`http://localhost:5000/record_loan_interest/${modal.dataset.loanId}`, {
+  apiFetch(`/record_loan_interest/${modal.dataset.loanId}`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ amount, date })
   }).then(response => response.json()).then(result => {
@@ -475,7 +496,7 @@ function submitLoanInterest() {
 }
 
 async function viewLoanHistory(loanId) {
-  const response = await fetch('http://localhost:5000/get_loans');
+  const response = await apiFetch('/get_loans');
   const loan = (await response.json()).find(item => String(item.id) === String(loanId));
   const payments = loan ? loan.interestPayments || [] : [];
   alert(payments.length ? payments.map(payment => `${formatDate(payment.date)}: ₹${Number(payment.amount).toFixed(2)}`).join('\n') : 'No interest payments recorded yet.');
@@ -483,7 +504,7 @@ async function viewLoanHistory(loanId) {
 
 async function deleteLoan(loanId) {
   if (!confirm('Delete this loan and its interest payment history?')) return;
-  const response = await fetch(`http://localhost:5000/delete_loan/${loanId}`, { method: 'DELETE' });
+  const response = await apiFetch(`/delete_loan/${loanId}`, { method: 'DELETE' });
   if (response.ok) loadLoans();
   else alert('Error deleting loan');
 }
@@ -546,7 +567,7 @@ function generateMonthlySchedule(months, monthlyAmount, startDate) {
 // ============ LOAD AND DISPLAY LENDINGS BY TYPE ============
 async function loadDashboard(type) {
   try {
-    const response = await fetch('http://localhost:5000/get_lendings');
+    const response = await apiFetch('/get_lendings');
     const allLendings = await response.json();
 
     // Filter lendings by type
@@ -655,7 +676,7 @@ function updateDashboardMetricsByType(lendingsData, type) {
 // ============ ANALYTICS ============
 async function loadAnalytics() {
   try {
-    const response = await fetch('http://localhost:5000/get_lendings');
+    const response = await apiFetch('/get_lendings');
     const lendingsData = await response.json();
     displayAnalytics(lendingsData);
   } catch (error) {
@@ -752,7 +773,7 @@ function displayAnalytics(lendingsData) {
 // ============ LENDING ACTIONS ============
 async function viewLendingDetails(lendingId) {
   try {
-    const response = await fetch('http://localhost:5000/get_lendings');
+    const response = await apiFetch('/get_lendings');
     const allLendings = await response.json();
     const lending = allLendings.find(l => String(l.id) === String(lendingId));
     if (!lending) { alert('Lending not found'); return; }
@@ -814,7 +835,7 @@ function closeDetailsModal() {
 }
 
 function recordPayment(lendingId) {
-  fetch('http://localhost:5000/get_lendings')
+  apiFetch('/get_lendings')
     .then(res => res.json())
     .then(allLendings => {
       const lending = allLendings.find(l => String(l.id) === String(lendingId));
@@ -859,7 +880,7 @@ function submitPayment() {
     return;
   }
 
-  fetch(`http://localhost:5000/record_payment/${lendingId}`, {
+  apiFetch(`/record_payment/${lendingId}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ amount, date })
@@ -900,7 +921,7 @@ document.getElementById('details-modal').addEventListener('click', (e) => {
 async function deleteLending(lendingId) {
   if (confirm('Are you sure you want to delete this lending?')) {
     try {
-      const response = await fetch(`http://localhost:5000/delete_lending/${lendingId}`, {
+      const response = await apiFetch(`/delete_lending/${lendingId}`, {
         method: 'DELETE'
       });
 
@@ -922,7 +943,7 @@ async function deleteLending(lendingId) {
 // ============ EXPORT & CLEAR DATA ============
 async function exportData() {
   try {
-    const response = await fetch('http://localhost:5000/get_lendings');
+    const response = await apiFetch('/get_lendings');
     const lendingsData = await response.json();
     const rows = [['Report Section', 'Person', 'Date', 'Type', 'Principal', 'Return Amount', 'Interest', 'Received', 'Outstanding', 'Notes']];
     ['daily', 'weekly', 'monthly'].forEach(type => {
@@ -953,7 +974,7 @@ async function exportData() {
 
   async function exportLoanReport() {
     try {
-      const response = await fetch('http://localhost:5000/get_loans');
+      const response = await apiFetch('/get_loans');
       const loansData = await response.json();
       const rows = [['Bank Name', 'Loan Date', 'Loan Amount', 'Monthly Interest', 'Interest Paid Date', 'Interest Paid', 'Notes']];
       loansData.forEach(loan => {
@@ -982,7 +1003,7 @@ async function exportData() {
 
 function clearAllData() {
   if (confirm('Are you sure? This will delete ALL data and cannot be undone!')) {
-    fetch('http://localhost:5000/clear_all', {
+    apiFetch('/clear_all', {
       method: 'POST'
     }).then(res => {
       if (res.ok) {
