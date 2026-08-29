@@ -1,10 +1,380 @@
-// ============ LOCAL STORAGE & STATE ============
+// ============ STORAGE & API CONFIGURATION ============
 let lendings = [];
 const localApiOrigin = 'http://localhost:5000';
 const sheetsApiOrigin = (window.GOOGLE_SHEETS_WEB_APP_URL || '').replace(/\/$/, '');
 const nativeFetch = window.fetch.bind(window);
 const isLocalHost = ['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname);
-const useLocalApi = isLocalHost || !sheetsApiOrigin;
+
+function getGithubConfig() {
+  return {
+    owner: (localStorage.getItem('gh_owner') || '').trim(),
+    repo: (localStorage.getItem('gh_repo') || '').trim(),
+    branch: (localStorage.getItem('gh_branch') || 'main').trim(),
+    token: (localStorage.getItem('gh_token') || '').trim()
+  };
+}
+
+function hasGithubConfig() {
+  const c = getGithubConfig();
+  return Boolean(c.owner && c.repo && c.token);
+}
+
+// Base64 helper supporting full Unicode / UTF-8
+function decodeBase64Utf8(base64Str) {
+  try {
+    const cleanStr = (base64Str || '').replace(/\s/g, '');
+    const binary = atob(cleanStr);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return new TextDecoder().decode(bytes);
+  } catch (e) {
+    console.error('Base64 decode error:', e);
+    return '[]';
+  }
+}
+
+function encodeBase64Utf8(str) {
+  const bytes = new TextEncoder().encode(str);
+  let binary = '';
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
+
+const githubShaCache = {};
+
+async function fetchGithubFile(filePath) {
+  const config = getGithubConfig();
+  if (!config.owner || !config.repo || !config.token) {
+    throw new Error('GitHub settings not configured. Please enter your Username, Repo, and Token in Settings.');
+  }
+
+  const url = `https://api.github.com/repos/${encodeURIComponent(config.owner)}/${encodeURIComponent(config.repo)}/contents/${filePath}?ref=${encodeURIComponent(config.branch)}&_t=${Date.now()}`;
+  const response = await nativeFetch(url, {
+    headers: {
+      'Authorization': `Bearer ${config.token}`,
+      'Accept': 'application/vnd.github.v3+json',
+      'If-None-Match': ''
+    }
+  });
+
+  if (response.status === 404) {
+    return { sha: null, data: [] };
+  }
+
+  if (!response.ok) {
+    const errData = await response.json().catch(() => ({}));
+    throw new Error(errData.message || `GitHub API error (status ${response.status})`);
+  }
+
+  const fileData = await response.json();
+  githubShaCache[filePath] = fileData.sha;
+  const decodedText = decodeBase64Utf8(fileData.content);
+  let parsed = [];
+  try {
+    parsed = JSON.parse(decodedText);
+  } catch (e) {
+    parsed = [];
+  }
+  return { sha: fileData.sha, data: Array.isArray(parsed) ? parsed : [] };
+}
+
+async function saveGithubFile(filePath, contentArray, commitMessage) {
+  const config = getGithubConfig();
+  if (!config.owner || !config.repo || !config.token) {
+    throw new Error('GitHub settings not configured. Please enter your Username, Repo, and Token in Settings.');
+  }
+
+  // Always fetch fresh sha right before writing to prevent 409 conflict
+  let sha = githubShaCache[filePath] || null;
+  try {
+    const checkUrl = `https://api.github.com/repos/${encodeURIComponent(config.owner)}/${encodeURIComponent(config.repo)}/contents/${filePath}?ref=${encodeURIComponent(config.branch)}&_t=${Date.now()}`;
+    const checkRes = await nativeFetch(checkUrl, {
+      headers: {
+        'Authorization': `Bearer ${config.token}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+    if (checkRes.ok) {
+      const checkData = await checkRes.json();
+      sha = checkData.sha;
+    }
+  } catch (e) {
+    // fallback to cached sha
+  }
+
+  const jsonString = JSON.stringify(contentArray, null, 2);
+  const base64Content = encodeBase64Utf8(jsonString);
+
+  const url = `https://api.github.com/repos/${encodeURIComponent(config.owner)}/${encodeURIComponent(config.repo)}/contents/${filePath}`;
+  const payload = {
+    message: commitMessage || `Update ${filePath} via Finance App`,
+    content: base64Content,
+    branch: config.branch
+  };
+  if (sha) {
+    payload.sha = sha;
+  }
+
+  const response = await nativeFetch(url, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${config.token}`,
+      'Accept': 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    const errData = await response.json().catch(() => ({}));
+    throw new Error(errData.message || `GitHub save error (${response.status})`);
+  }
+
+  const result = await response.json();
+  if (result.content && result.content.sha) {
+    githubShaCache[filePath] = result.content.sha;
+  }
+  return result;
+}
+
+async function handleGithubApi(path, options = {}) {
+  let bodyData = null;
+  if (options.body) {
+    try {
+      bodyData = typeof options.body === 'string' ? JSON.parse(options.body) : options.body;
+    } catch (e) {
+      bodyData = options.body;
+    }
+  }
+
+  const cleanPath = path.replace(/^\/+/, '');
+  const pathParts = cleanPath.split('/');
+  const endpoint = pathParts[0];
+  const itemId = pathParts[1] || '';
+
+  try {
+    // 1. LENDINGS
+    if (endpoint === 'get_lendings') {
+      const { data } = await fetchGithubFile('backend/lendings.json');
+      return { ok: true, status: 200, json: async () => data, text: async () => JSON.stringify(data) };
+    }
+
+    if (endpoint === 'add_lending') {
+      const { data } = await fetchGithubFile('backend/lendings.json');
+      const newLending = { ...bodyData, id: String(bodyData.id || Date.now()) };
+      data.push(newLending);
+      await saveGithubFile('backend/lendings.json', data, `Add lending: ${newLending.name || newLending.id}`);
+      return { ok: true, status: 201, json: async () => ({ status: 'success', lending: newLending }) };
+    }
+
+    if (endpoint === 'record_payment') {
+      const { data } = await fetchGithubFile('backend/lendings.json');
+      const lending = data.find(l => String(l.id) === String(itemId));
+      if (!lending) throw new Error('Lending record not found');
+
+      const amount = Number(bodyData.amount || 0);
+      const paymentDate = bodyData.date || new Date().toISOString().split('T')[0];
+
+      lending.received = Number(lending.received || 0) + amount;
+      if (!Array.isArray(lending.payments)) lending.payments = [];
+      lending.payments.push({ date: paymentDate, amount: amount });
+
+      let remaining = amount;
+      if (Array.isArray(lending.schedule)) {
+        for (const item of lending.schedule) {
+          if (!item.received && remaining > 0) {
+            const itemAmount = Number(item.amount || 0);
+            if (remaining >= itemAmount) {
+              item.received = true;
+              item.receivedDate = paymentDate;
+              item.receivedAmount = itemAmount;
+              remaining -= itemAmount;
+            } else {
+              item.receivedAmount = Number(item.receivedAmount || 0) + remaining;
+              remaining = 0;
+            }
+          }
+        }
+      }
+
+      if (lending.received >= Number(lending.returnAmount || 0)) {
+        lending.status = 'completed';
+      }
+
+      await saveGithubFile('backend/lendings.json', data, `Record payment of ₹${amount} for ${lending.name || itemId}`);
+      return { ok: true, status: 200, json: async () => ({ status: 'success', lending }) };
+    }
+
+    if (endpoint === 'delete_lending') {
+      const { data } = await fetchGithubFile('backend/lendings.json');
+      const filtered = data.filter(l => String(l.id) !== String(itemId));
+      await saveGithubFile('backend/lendings.json', filtered, `Delete lending ${itemId}`);
+      return { ok: true, status: 200, json: async () => ({ status: 'success' }) };
+    }
+
+    // 2. LOANS
+    if (endpoint === 'get_loans') {
+      const { data } = await fetchGithubFile('backend/loans.json');
+      return { ok: true, status: 200, json: async () => data, text: async () => JSON.stringify(data) };
+    }
+
+    if (endpoint === 'add_loan') {
+      const { data } = await fetchGithubFile('backend/loans.json');
+      const newLoan = {
+        id: String(bodyData.id || Date.now()),
+        bankName: String(bodyData.bankName || '').trim(),
+        date: bodyData.date,
+        loanAmount: Number(bodyData.loanAmount || 0),
+        monthlyInterest: Number(bodyData.monthlyInterest || 0),
+        notes: bodyData.notes || '',
+        interestPayments: [],
+        createdAt: new Date().toISOString()
+      };
+      data.push(newLoan);
+      await saveGithubFile('backend/loans.json', data, `Add loan: ${newLoan.bankName}`);
+      return { ok: true, status: 201, json: async () => ({ status: 'success', loan: newLoan }) };
+    }
+
+    if (endpoint === 'record_loan_interest') {
+      const { data } = await fetchGithubFile('backend/loans.json');
+      const loan = data.find(l => String(l.id) === String(itemId));
+      if (!loan) throw new Error('Loan not found');
+
+      const amount = Number(bodyData.amount || 0);
+      const paymentDate = bodyData.date || new Date().toISOString().split('T')[0];
+
+      if (!Array.isArray(loan.interestPayments)) loan.interestPayments = [];
+      loan.interestPayments.push({ date: paymentDate, amount: amount });
+
+      await saveGithubFile('backend/loans.json', data, `Record interest payment for ${loan.bankName || itemId}`);
+      return { ok: true, status: 200, json: async () => ({ status: 'success', loan }) };
+    }
+
+    if (endpoint === 'delete_loan') {
+      const { data } = await fetchGithubFile('backend/loans.json');
+      const filtered = data.filter(l => String(l.id) !== String(itemId));
+      await saveGithubFile('backend/loans.json', filtered, `Delete loan ${itemId}`);
+      return { ok: true, status: 200, json: async () => ({ status: 'success' }) };
+    }
+
+    // 3. CHITS
+    if (endpoint === 'get_chits') {
+      const { data } = await fetchGithubFile('backend/chits.json');
+      return { ok: true, status: 200, json: async () => data, text: async () => JSON.stringify(data) };
+    }
+
+    if (endpoint === 'add_chit') {
+      const { data } = await fetchGithubFile('backend/chits.json');
+      const newChit = {
+        id: String(bodyData.id || Date.now()),
+        personName: String(bodyData.personName || '').trim(),
+        chitAmount: Number(bodyData.chitAmount || 0),
+        payments: [],
+        notes: bodyData.notes || '',
+        createdAt: new Date().toISOString()
+      };
+      data.push(newChit);
+      await saveGithubFile('backend/chits.json', data, `Add chit: ${newChit.personName}`);
+      return { ok: true, status: 201, json: async () => ({ status: 'success', chit: newChit }) };
+    }
+
+    if (endpoint === 'record_chit_payment') {
+      const { data } = await fetchGithubFile('backend/chits.json');
+      const chit = data.find(c => String(c.id) === String(itemId));
+      if (!chit) throw new Error('Chit not found');
+
+      const amount = Number(bodyData.amount || 0);
+      const paymentDate = bodyData.date || new Date().toISOString().split('T')[0];
+      const note = String(bodyData.note || '').trim();
+
+      if (!Array.isArray(chit.payments)) chit.payments = [];
+      chit.payments.push({ date: paymentDate, amount: amount, note: note });
+
+      await saveGithubFile('backend/chits.json', data, `Record chit payment for ${chit.personName || itemId}`);
+      return { ok: true, status: 200, json: async () => ({ status: 'success', chit }) };
+    }
+
+    if (endpoint === 'delete_chit') {
+      const { data } = await fetchGithubFile('backend/chits.json');
+      const filtered = data.filter(c => String(c.id) !== String(itemId));
+      await saveGithubFile('backend/chits.json', filtered, `Delete chit ${itemId}`);
+      return { ok: true, status: 200, json: async () => ({ status: 'success' }) };
+    }
+
+    // 4. CLEAR ALL
+    if (endpoint === 'clear_all') {
+      await saveGithubFile('backend/lendings.json', [], 'Clear all lendings');
+      await saveGithubFile('backend/loans.json', [], 'Clear all loans');
+      await saveGithubFile('backend/chits.json', [], 'Clear all chits');
+      return { ok: true, status: 200, json: async () => ({ status: 'success' }) };
+    }
+
+    throw new Error(`Unknown endpoint: ${endpoint}`);
+  } catch (error) {
+    console.error('GitHub API Handler error:', error);
+    return {
+      ok: false,
+      status: 400,
+      json: async () => ({ status: 'error', message: error.message }),
+      text: async () => error.message
+    };
+  }
+}
+
+async function handleGoogleSheetsApi(url, options = {}) {
+  const requestOptions = { ...options };
+  const localPath = url.slice(localApiOrigin.length).replace(/^\/+/, '');
+  const pathParts = localPath.split('/').filter(Boolean);
+  const action = pathParts[0] || '';
+  const id = pathParts.length > 1 ? pathParts[1] : '';
+
+  const params = new URLSearchParams();
+  if (action) params.set('action', action);
+  if (id) params.set('id', id);
+
+  if (requestOptions.body && requestOptions.method?.toUpperCase() === 'POST') {
+    try {
+      const bodyData = JSON.parse(requestOptions.body);
+      params.set('data', JSON.stringify(bodyData));
+    } catch (e) {}
+  }
+
+  let requestUrl = `${sheetsApiOrigin}${sheetsApiOrigin.includes('?') ? '&' : '?'}${params.toString()}`;
+  const finalOptions = { ...requestOptions };
+  if (requestOptions.method?.toUpperCase() === 'POST' || requestOptions.method?.toUpperCase() === 'DELETE') {
+    finalOptions.method = 'GET';
+    delete finalOptions.body;
+    delete finalOptions.headers?.['Content-Type'];
+  }
+
+  try {
+    const response = await nativeFetch(requestUrl, finalOptions);
+    const responseText = await response.text();
+    let data = {};
+    try {
+      data = responseText ? JSON.parse(responseText) : {};
+    } catch (parseError) {
+      data = { status: 'error', message: `Invalid response: ${responseText.substring(0, 100)}` };
+    }
+    return {
+      ok: response.ok && data.status !== 'error',
+      status: response.status,
+      json: async () => data,
+      text: async () => responseText
+    };
+  } catch (fetchError) {
+    return {
+      ok: false,
+      status: 0,
+      json: async () => ({ status: 'error', message: fetchError.message }),
+      text: async () => fetchError.message
+    };
+  }
+}
 
 // Start with the layout that matches the actual device width.
 const deviceMode = window.matchMedia('(max-width: 768px)').matches ? 'mobile-mode' : 'desktop-mode';
@@ -15,81 +385,29 @@ window.fetch = async (url, options = {}) => {
     return nativeFetch(url, options);
   }
 
-  if (useLocalApi) {
+  if (isLocalHost) {
     return nativeFetch(url, options);
   }
 
-  if (!sheetsApiOrigin) {
-    return {
-      ok: false,
-      status: 0,
-      json: async () => ({ status: 'error', message: 'Google Sheets API URL not configured in config.js' }),
-      text: async () => 'API URL not configured'
-    };
+  const path = url.slice(localApiOrigin.length);
+
+  if (hasGithubConfig()) {
+    return handleGithubApi(path, options);
   }
 
-  const requestOptions = { ...options };
-  const localPath = url.slice(localApiOrigin.length).replace(/^\/+|\/+$/g, '');
-  const pathParts = localPath.split('/').filter(Boolean);
-  const action = pathParts[0] || '';
-  const id = pathParts.length > 1 ? pathParts[1] : '';
-
-  const params = new URLSearchParams();
-  if (action) params.set('action', action);
-  if (id) params.set('id', id);
-
-  // If there's a POST body, add it to query params to avoid CORS preflight
-  if (requestOptions.body && requestOptions.method?.toUpperCase() === 'POST') {
-    try {
-      const bodyData = JSON.parse(requestOptions.body);
-      params.set('data', JSON.stringify(bodyData));
-    } catch (e) {
-      // If body is not JSON, send it as-is
-    }
+  if (sheetsApiOrigin) {
+    return handleGoogleSheetsApi(url, options);
   }
 
-  let requestUrl = `${sheetsApiOrigin}${sheetsApiOrigin.includes('?') ? '&' : '?'}${params.toString()}`;
-
-  // For POST requests to Apps Script, use GET to avoid CORS preflight issues
-  const finalOptions = { ...requestOptions };
-  if (requestOptions.method?.toUpperCase() === 'POST') {
-    finalOptions.method = 'GET';
-    delete finalOptions.body;
-    delete finalOptions.headers?.['Content-Type'];
-  }
-
-  if (requestOptions.method?.toUpperCase() === 'DELETE') {
-    finalOptions.method = 'GET';
-    delete finalOptions.body;
-  }
-
-  try {
-    const response = await nativeFetch(requestUrl, finalOptions);
-    const responseText = await response.text();
-    let data = {};
-
-    try {
-      data = responseText ? JSON.parse(responseText) : {};
-    } catch (parseError) {
-      console.error('Failed to parse Apps Script response:', responseText);
-      data = { status: 'error', message: `Invalid response from server: ${responseText.substring(0, 100)}` };
-    }
-
-    return {
-      ok: response.ok && data.status !== 'error',
-      status: response.status,
-      json: async () => data,
-      text: async () => responseText
-    };
-  } catch (fetchError) {
-    console.error('Fetch error:', fetchError);
-    return {
-      ok: false,
-      status: 0,
-      json: async () => ({ status: 'error', message: `Network error: ${fetchError.message}` }),
-      text: async () => fetchError.message
-    };
-  }
+  return {
+    ok: false,
+    status: 0,
+    json: async () => ({
+      status: 'error',
+      message: 'Storage not configured. Please enter your GitHub details under Settings -> GitHub REST API Storage.'
+    }),
+    text: async () => 'Storage not configured'
+  };
 };
 
 function apiFetch(path, options = {}) {
@@ -1036,16 +1354,25 @@ async function exportData() {
     }
   }
 
+// ============ EXPORT & CLEAR DATA ============
+// ============ EXPORT & CLEAR DATA ============
 function clearAllData() {
-  if (confirm('Are you sure? This will delete ALL data and cannot be undone!')) {
+  if (confirm('Are you sure? This will delete ALL data (lendings, loans, chits) and cannot be undone!')) {
     apiFetch('/clear_all', {
       method: 'POST'
     }).then(res => {
       if (res.ok) {
-        alert('All data cleared!');
-        loadLendings();
+        alert('All data cleared successfully!');
+        loadDashboard('daily');
+        loadDashboard('weekly');
+        loadDashboard('monthly');
+        loadChits();
+        loadLoans();
+        loadAnalytics();
+      } else {
+        alert('Error clearing data');
       }
-    });
+    }).catch(err => alert('Error clearing data: ' + err.message));
   }
 }
 
@@ -1059,19 +1386,177 @@ async function testApiConnection() {
     const data = await response.json();
     
     if (response.ok) {
-      statusEl.textContent = '✅ API Connection: SUCCESS - Backend is working!';
+      statusEl.textContent = '✅ API Connection: SUCCESS - Backend / Storage is working!';
       statusEl.style.color = '#28a745';
     } else if (data.message) {
       statusEl.textContent = `❌ API Error: ${data.message}`;
       statusEl.style.color = '#dc3545';
     } else {
-      statusEl.textContent = '❌ API Connection: FAILED - Server returned an error';
+      statusEl.textContent = '❌ API Connection: FAILED';
       statusEl.style.color = '#dc3545';
     }
   } catch (error) {
     statusEl.textContent = `❌ Connection Error: ${error.message}`;
     statusEl.style.color = '#dc3545';
-    console.error('Connection test error:', error);
+  }
+}
+
+// ============ GITHUB REST API CONFIG & SETTINGS ============
+function populateGithubSettingsForm() {
+  const config = getGithubConfig();
+  const ownerEl = document.getElementById('gh-owner');
+  const repoEl = document.getElementById('gh-repo');
+  const branchEl = document.getElementById('gh-branch');
+  const tokenEl = document.getElementById('gh-token');
+
+  if (ownerEl) ownerEl.value = config.owner;
+  if (repoEl) repoEl.value = config.repo;
+  if (branchEl) branchEl.value = config.branch || 'main';
+  if (tokenEl) tokenEl.value = config.token;
+
+  updateStorageStatusText();
+}
+
+function saveGithubConfig(event) {
+  if (event) event.preventDefault();
+  const owner = (document.getElementById('gh-owner')?.value || '').trim();
+  const repo = (document.getElementById('gh-repo')?.value || '').trim();
+  const branch = (document.getElementById('gh-branch')?.value || 'main').trim();
+  const token = (document.getElementById('gh-token')?.value || '').trim();
+
+  localStorage.setItem('gh_owner', owner);
+  localStorage.setItem('gh_repo', repo);
+  localStorage.setItem('gh_branch', branch);
+  localStorage.setItem('gh_token', token);
+
+  const statusEl = document.getElementById('github-status');
+  if (statusEl) {
+    statusEl.textContent = '✅ GitHub settings saved successfully! Reloading data...';
+    statusEl.style.color = '#28a745';
+  }
+
+  updateStorageStatusText();
+
+  // Reload current data
+  loadDashboard('daily');
+  loadDashboard('weekly');
+  loadDashboard('monthly');
+  loadChits();
+  loadLoans();
+  loadAnalytics();
+}
+
+async function testGithubConnection() {
+  const statusEl = document.getElementById('github-status');
+  if (statusEl) {
+    statusEl.textContent = '⏳ Testing GitHub repository connection...';
+    statusEl.style.color = '#0066cc';
+  }
+
+  const owner = (document.getElementById('gh-owner')?.value || localStorage.getItem('gh_owner') || '').trim();
+  const repo = (document.getElementById('gh-repo')?.value || localStorage.getItem('gh_repo') || '').trim();
+  const branch = (document.getElementById('gh-branch')?.value || localStorage.getItem('gh_branch') || 'main').trim();
+  const token = (document.getElementById('gh-token')?.value || localStorage.getItem('gh_token') || '').trim();
+
+  if (!owner || !repo || !token) {
+    if (statusEl) {
+      statusEl.textContent = '❌ Please enter your GitHub Username, Repo Name, and Token.';
+      statusEl.style.color = '#dc3545';
+    }
+    return;
+  }
+
+  try {
+    const testUrl = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/backend/lendings.json?ref=${encodeURIComponent(branch)}&_t=${Date.now()}`;
+    const res = await nativeFetch(testUrl, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+
+    if (res.ok) {
+      const fileData = await res.json();
+      if (statusEl) {
+        statusEl.textContent = `✅ Connected! Successfully accessed backend/lendings.json (SHA: ${fileData.sha.substring(0, 7)})`;
+        statusEl.style.color = '#28a745';
+      }
+    } else if (res.status === 404) {
+      const repoRes = await nativeFetch(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      });
+      if (repoRes.ok) {
+        if (statusEl) {
+          statusEl.textContent = '⚠️ Repository connected, but backend/lendings.json does not exist yet. It will be created when you add your first record.';
+          statusEl.style.color = '#f39c12';
+        }
+      } else {
+        const repoErr = await repoRes.json().catch(() => ({}));
+        if (statusEl) {
+          statusEl.textContent = `❌ Repository error: ${repoErr.message || res.statusText}`;
+          statusEl.style.color = '#dc3545';
+        }
+      }
+    } else {
+      const errData = await res.json().catch(() => ({}));
+      if (statusEl) {
+        statusEl.textContent = `❌ GitHub API error: ${errData.message || res.statusText}`;
+        statusEl.style.color = '#dc3545';
+      }
+    }
+  } catch (error) {
+    if (statusEl) {
+      statusEl.textContent = `❌ Connection error: ${error.message}`;
+      statusEl.style.color = '#dc3545';
+    }
+  }
+}
+
+function clearGithubConfig() {
+  if (confirm('Clear saved GitHub credentials from this browser?')) {
+    localStorage.removeItem('gh_owner');
+    localStorage.removeItem('gh_repo');
+    localStorage.removeItem('gh_branch');
+    localStorage.removeItem('gh_token');
+
+    const ownerEl = document.getElementById('gh-owner');
+    const repoEl = document.getElementById('gh-repo');
+    const branchEl = document.getElementById('gh-branch');
+    const tokenEl = document.getElementById('gh-token');
+    if (ownerEl) ownerEl.value = '';
+    if (repoEl) repoEl.value = '';
+    if (branchEl) branchEl.value = 'main';
+    if (tokenEl) tokenEl.value = '';
+
+    const statusEl = document.getElementById('github-status');
+    if (statusEl) {
+      statusEl.textContent = 'GitHub credentials cleared.';
+      statusEl.style.color = '#666';
+    }
+    updateStorageStatusText();
+  }
+}
+
+function updateStorageStatusText() {
+  const statusEl = document.getElementById('api-status');
+  if (!statusEl) return;
+
+  if (isLocalHost) {
+    statusEl.textContent = '📌 Mode: LOCAL API (localhost:5000)';
+    statusEl.style.color = '#0066cc';
+  } else if (hasGithubConfig()) {
+    const c = getGithubConfig();
+    statusEl.textContent = `📌 Mode: GITHUB REST API (${c.owner}/${c.repo} @ ${c.branch})`;
+    statusEl.style.color = '#28a745';
+  } else if (sheetsApiOrigin) {
+    statusEl.textContent = `📌 Mode: GOOGLE SHEETS API (${sheetsApiOrigin.substring(0, 40)}...)`;
+    statusEl.style.color = '#0066cc';
+  } else {
+    statusEl.textContent = '⚠️ Storage NOT configured. Set your GitHub Token in Settings above.';
+    statusEl.style.color = '#dc3545';
   }
 }
 
@@ -1086,18 +1571,15 @@ function formatDate(dateString) {
 
 // ============ INITIALIZATION ============
 document.addEventListener('DOMContentLoaded', () => {
-  // Show API status
-  const statusEl = document.getElementById('api-status');
-  if (useLocalApi) {
-    statusEl.textContent = '📌 Using LOCAL API (localhost:5000)';
-    statusEl.style.color = '#0066cc';
-  } else {
-    statusEl.textContent = `📌 Using GOOGLE SHEETS API - ${sheetsApiOrigin.substring(0, 40)}...`;
-    statusEl.style.color = '#0066cc';
-  }
+  populateGithubSettingsForm();
+  updateStorageStatusText();
 
-  document.getElementById('lending-date').valueAsDate = new Date();
-  document.getElementById('loan-date').valueAsDate = new Date();
+  const lendingDateEl = document.getElementById('lending-date');
+  if (lendingDateEl) lendingDateEl.valueAsDate = new Date();
+  
+  const loanDateEl = document.getElementById('loan-date');
+  if (loanDateEl) loanDateEl.valueAsDate = new Date();
+
   // Load all dashboards and analytics on page load
   loadDashboard('daily');
   loadDashboard('weekly');

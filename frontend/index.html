@@ -415,18 +415,57 @@
       <div id="settings" class="page">
         <div class="page-header">
           <h1>Settings</h1>
-          <p>App Configuration</p>
+          <p>Storage & App Configuration</p>
         </div>
 
-        <div class="settings-section">
-          <h3>API Connection</h3>
+        <!-- GitHub Storage Configuration -->
+        <div class="settings-section" style="margin-bottom: 2rem;">
+          <h3>🐙 GitHub REST API Storage (Direct .json Sync)</h3>
+          <p style="font-size: 0.9rem; color: #666; margin-bottom: 1.25rem;">
+            Connect directly to your GitHub repository to read and write records into <code>backend/lendings.json</code>, <code>backend/loans.json</code>, and <code>backend/chits.json</code> without needing Google Sheets or a hosted backend server. Your personal token is saved securely in your browser's local storage only.
+          </p>
+
+          <form id="github-config-form" onsubmit="saveGithubConfig(event)" class="settings-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="gh-owner">GITHUB USERNAME / OWNER *</label>
+                <input type="text" id="gh-owner" placeholder="e.g., gokul2412" required>
+              </div>
+              <div class="form-group">
+                <label for="gh-repo">REPOSITORY NAME *</label>
+                <input type="text" id="gh-repo" placeholder="e.g., Finance-App" required>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="gh-branch">BRANCH *</label>
+                <input type="text" id="gh-branch" placeholder="main" value="main" required>
+              </div>
+              <div class="form-group">
+                <label for="gh-token">PERSONAL ACCESS TOKEN (PAT) *</label>
+                <input type="password" id="gh-token" placeholder="ghp_... or github_pat_..." required>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 10px;">
+              <button type="submit" class="btn-primary" style="padding: 0.75rem 1.5rem; background: var(--accent-color); color: white; border: none; border-radius: 0.5rem; cursor: pointer;">💾 Save GitHub Settings</button>
+              <button type="button" class="btn-secondary" onclick="testGithubConnection()" style="padding: 0.75rem 1.5rem;">🔍 Test GitHub Connection</button>
+              <button type="button" class="btn-small" onclick="clearGithubConfig()" style="background: #e2e8f0; color: #333;">Clear Token</button>
+            </div>
+            <p id="github-status" style="margin-top: 12px; font-size: 14px; font-weight: 500;"></p>
+          </form>
+        </div>
+
+        <div class="settings-section" style="margin-bottom: 2rem;">
+          <h3>Local / Google Sheets API Status</h3>
           <p id="api-status" style="margin-bottom: 10px; font-size: 14px; color: #666;"></p>
-          <button class="btn-secondary" onclick="testApiConnection()">🔍 Test API Connection</button>
+          <button class="btn-secondary" onclick="testApiConnection()">🔍 Test Local / Google Sheets API</button>
         </div>
 
         <div class="settings-section">
           <h3>Data Management</h3>
-          <button class="btn-danger" onclick="exportData()">📥 Export Data</button>
+          <button class="btn-danger" onclick="exportData()">📥 Export Lendings CSV</button>
           <button class="btn-danger" onclick="exportLoanReport()">📥 Export Loans CSV</button>
           <button class="btn-danger" onclick="clearAllData()">🗑️ Clear All Data</button>
         </div>
