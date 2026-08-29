@@ -1,7 +1,6 @@
 // ============ STORAGE & API CONFIGURATION ============
 let lendings = [];
 const localApiOrigin = 'http://localhost:5000';
-const sheetsApiOrigin = (window.GOOGLE_SHEETS_WEB_APP_URL || '').replace(/\/$/, '');
 const nativeFetch = window.fetch.bind(window);
 const isLocalHost = ['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname);
 
@@ -325,6 +324,12 @@ async function handleGithubApi(path, options = {}) {
   }
 }
 
+
+/*
+// ============ (LEGACY) GOOGLE SHEETS API HANDLER ============
+// Retained for reference or future rollback if needed.
+const sheetsApiOrigin = (window.GOOGLE_SHEETS_WEB_APP_URL || '').replace(/\/$/, '');
+
 async function handleGoogleSheetsApi(url, options = {}) {
   const requestOptions = { ...options };
   const localPath = url.slice(localApiOrigin.length).replace(/^\/+/, '');
@@ -343,7 +348,7 @@ async function handleGoogleSheetsApi(url, options = {}) {
     } catch (e) {}
   }
 
-  let requestUrl = `${sheetsApiOrigin}${sheetsApiOrigin.includes('?') ? '&' : '?'}${params.toString()}`;
+  let requestUrl = ;
   const finalOptions = { ...requestOptions };
   if (requestOptions.method?.toUpperCase() === 'POST' || requestOptions.method?.toUpperCase() === 'DELETE') {
     finalOptions.method = 'GET';
@@ -358,7 +363,7 @@ async function handleGoogleSheetsApi(url, options = {}) {
     try {
       data = responseText ? JSON.parse(responseText) : {};
     } catch (parseError) {
-      data = { status: 'error', message: `Invalid response: ${responseText.substring(0, 100)}` };
+      data = { status: 'error', message:  };
     }
     return {
       ok: response.ok && data.status !== 'error',
@@ -375,6 +380,7 @@ async function handleGoogleSheetsApi(url, options = {}) {
     };
   }
 }
+*/
 
 // Start with the layout that matches the actual device width.
 const deviceMode = window.matchMedia('(max-width: 768px)').matches ? 'mobile-mode' : 'desktop-mode';
@@ -393,10 +399,6 @@ window.fetch = async (url, options = {}) => {
 
   if (hasGithubConfig()) {
     return handleGithubApi(path, options);
-  }
-
-  if (sheetsApiOrigin) {
-    return handleGoogleSheetsApi(url, options);
   }
 
   return {

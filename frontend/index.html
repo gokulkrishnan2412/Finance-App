@@ -349,7 +349,7 @@
         <div class="lendings-section">
           <div class="section-heading">
             <h2>My Loans</h2>
-            <button type="button" class="btn-small" onclick="exportLoanReport()">📥 Download Google Sheets CSV</button>
+            <button type="button" class="btn-small" onclick="exportLoanReport()">📥 Export Loans CSV</button>
           </div>
           <div id="loans-list" class="lendings-list"></div>
         </div>
@@ -458,9 +458,9 @@
         </div>
 
         <div class="settings-section" style="margin-bottom: 2rem;">
-          <h3>Local / Google Sheets API Status</h3>
+          <h3>Backend & Storage Status</h3>
           <p id="api-status" style="margin-bottom: 10px; font-size: 14px; color: #666;"></p>
-          <button class="btn-secondary" onclick="testApiConnection()">🔍 Test Local / Google Sheets API</button>
+          <button class="btn-secondary" onclick="testApiConnection()">🔍 Test Storage / API Connection</button>
         </div>
 
         <div class="settings-section">
@@ -593,7 +593,7 @@
     </div>
   </div>
 
-  <script src="config.js"></script>
+  <!-- <script src="config.js"></script> (Legacy Google Sheets config) -->
   <script src="script.js"></script>
 </body>
 </html>
