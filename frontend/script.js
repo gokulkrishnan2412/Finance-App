@@ -15,18 +15,30 @@ window.fetch = async (url, options = {}) => {
 
   const requestOptions = { ...options };
   const requestUrl = `${sheetsApiOrigin}${url.slice(localApiOrigin.length)}`;
+
   if (requestOptions.method && requestOptions.method.toUpperCase() === 'DELETE') {
     requestOptions.method = 'POST';
   }
-  if (requestOptions.body && requestOptions.headers) {
-    requestOptions.headers = { ...requestOptions.headers, 'Content-Type': 'text/plain;charset=utf-8' };
+
+  if (requestOptions.body && !requestOptions.headers?.['Content-Type'] && !requestOptions.headers?.['content-type']) {
+    requestOptions.headers = { ...(requestOptions.headers || {}), 'Content-Type': 'application/json' };
   }
 
   const response = await nativeFetch(requestUrl, requestOptions);
-  const data = await response.json();
+  const responseText = await response.text();
+  let data = {};
+
+  try {
+    data = responseText ? JSON.parse(responseText) : {};
+  } catch (error) {
+    data = { status: 'error', message: responseText || `Request failed with status ${response.status}` };
+  }
+
   return {
     ok: response.ok && data.status !== 'error',
-    json: async () => data
+    status: response.status,
+    json: async () => data,
+    text: async () => responseText
   };
 };
 

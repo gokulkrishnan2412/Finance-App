@@ -1,4 +1,4 @@
-const SPREADSHEET_ID = 'PASTE_YOUR_GOOGLE_SHEET_ID_HERE';
+const SPREADSHEET_ID = '11NCRY2iYR86vffgWAskVLJPypFhhf23P2mLq6nrLiAQ';
 const SHEET_DEFINITIONS = {
   Lendings: [
     'id', 'name', 'date', 'principalAmount', 'returnAmount', 'interestAmount',
@@ -20,9 +20,16 @@ function doPost(event) {
 function route(event, method) {
   try {
     const path = (event.pathInfo || event.parameter.action || '').replace(/^\/+|\/+$/g, '');
-    const payload = method === 'POST' && event.postData && event.postData.contents
-      ? JSON.parse(event.postData.contents)
-      : event.parameter || {};
+    const rawBody = method === 'POST' && event.postData && event.postData.contents ? event.postData.contents : '';
+    let payload = event.parameter || {};
+
+    if (rawBody) {
+      try {
+        payload = JSON.parse(rawBody);
+      } catch (error) {
+        payload = Object.assign({}, event.parameter || {});
+      }
+    }
 
     switch (path) {
       case 'get_lendings': return respond(readRecords('Lendings'));
