@@ -1,1 +1,116 @@
-[]
+[
+  {
+    "id": "1788328653715",
+    "name": "Nithyanandham",
+    "date": "2026-07-18",
+    "principalAmount": 200000,
+    "returnAmount": 200000,
+    "interestAmount": 6000,
+    "type": "monthly",
+    "notes": "",
+    "received": 0,
+    "payments": [],
+    "status": "active",
+    "createdAt": "2026-09-02T05:57:33.715Z",
+    "duration": 12,
+    "monthlyAmount": 16666.666666666668,
+    "schedule": [
+      {
+        "month": 1,
+        "amount": 16666.666666666668,
+        "dueDate": "2026-07-18",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 2,
+        "amount": 16666.666666666668,
+        "dueDate": "2026-08-18",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 3,
+        "amount": 16666.666666666668,
+        "dueDate": "2026-09-18",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 4,
+        "amount": 16666.666666666668,
+        "dueDate": "2026-10-18",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 5,
+        "amount": 16666.666666666668,
+        "dueDate": "2026-11-18",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 6,
+        "amount": 16666.666666666668,
+        "dueDate": "2026-12-18",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 7,
+        "amount": 16666.666666666668,
+        "dueDate": "2027-01-18",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 8,
+        "amount": 16666.666666666668,
+        "dueDate": "2027-02-18",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 9,
+        "amount": 16666.666666666668,
+        "dueDate": "2027-03-18",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 10,
+        "amount": 16666.666666666668,
+        "dueDate": "2027-04-18",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 11,
+        "amount": 16666.666666666668,
+        "dueDate": "2027-05-18",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 12,
+        "amount": 16666.666666666668,
+        "dueDate": "2027-06-18",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      }
+    ]
+  }
+]
