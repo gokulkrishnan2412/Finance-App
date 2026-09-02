@@ -41,9 +41,22 @@ pipeline {
         stage('Unit Test') {
             steps {
                 sh '''
+                    set -e
                     echo "Running UI tests with Playwright..."
-                    export NVM_DIR="$HOME/.nvm"
-                    . "$NVM_DIR/nvm.sh"
+
+                    if ! command -v node >/dev/null 2>&1; then
+                        export NVM_DIR="$HOME/.nvm"
+                        if [ ! -s "$NVM_DIR/nvm.sh" ]; then
+                            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+                        fi
+                        . "$NVM_DIR/nvm.sh"
+                        nvm install 20
+                        nvm use 20
+                    fi
+
+                    node -v
+                    npm -v
+
                     cd unit_test
                     npm install
                     npx playwright install --with-deps chromium
