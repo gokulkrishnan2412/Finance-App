@@ -15,6 +15,7 @@ pipeline {
                 sh '''
                     echo "Validating Python code..."
                     python3 -m compileall -q backend
+                    python3 -m pip install -r requirements.txt
                 '''
             }
         }
@@ -31,7 +32,8 @@ pipeline {
         stage('Smoke Test') {
             steps {
                 sh '''
-                    echo "need to add the smoke test later"
+                    echo "Running backend smoke test..."
+                    python3 -m pytest -q unit_test/test_backend.py
                 '''
             }
         }
@@ -39,7 +41,13 @@ pipeline {
         stage('Unit Test') {
             steps {
                 sh '''
-                    echo "need to add the unit test later"
+                    echo "Running UI tests with Playwright..."
+                    export NVM_DIR="$HOME/.nvm"
+                    . "$NVM_DIR/nvm.sh"
+                    cd unit_test
+                    npm install
+                    npx playwright install --with-deps chromium
+                    npx playwright test --reporter=line
                 '''
             }
         }
