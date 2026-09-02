@@ -426,6 +426,16 @@ function updateDeviceToggle() {
   });
 }
 
+function getOutstandingAmount(lending) {
+  if (lending.type === 'monthly') {
+    return Number(lending.principalAmount || 0);
+  }
+
+  const principal = Number(lending.principalAmount || 0);
+  const received = Number(lending.received || 0);
+  return Math.max(0, principal - received);
+}
+
 document.getElementById('device-toggle').addEventListener('click', () => {
   const isMobile = document.body.classList.toggle('mobile-mode');
   document.body.classList.toggle('desktop-mode', !isMobile);
@@ -952,8 +962,10 @@ function displayLendingsByType(lendingsData, type) {
   lendingsData.sort((a, b) => new Date(b.date) - new Date(a.date));
 
   lendingsData.forEach(lending => {
-    const outstanding = lending.returnAmount - lending.received;
-    const progress = (lending.received / lending.returnAmount) * 100;
+    const outstanding = getOutstandingAmount(lending);
+    const progress = lending.type === 'monthly'
+      ? 0
+      : (Number(lending.received || 0) / Math.max(Number(lending.principalAmount || 0), 1)) * 100;
 
     const item = document.createElement('div');
     item.className = 'lending-card';
@@ -1016,10 +1028,10 @@ function updateDashboardMetricsByType(lendingsData, type) {
   let totalInterest = 0;
 
   lendingsData.forEach(lending => {
-    totalLent += lending.principalAmount;
-    totalReceived += lending.received;
-    totalOutstanding += (lending.returnAmount - lending.received);
-    totalInterest += lending.interestAmount;
+    totalLent += Number(lending.principalAmount || 0);
+    totalReceived += Number(lending.received || 0);
+    totalOutstanding += getOutstandingAmount(lending);
+    totalInterest += Number(lending.interestAmount || 0);
   });
 
   document.getElementById(`${type}-total-lent`).textContent = totalLent.toFixed(2);
@@ -1048,12 +1060,12 @@ function displayAnalytics(lendingsData) {
   let pendingCollections = [];
 
   lendingsData.forEach(lending => {
-    const outstanding = lending.returnAmount - lending.received;
-    totalLended += lending.principalAmount;
+    const outstanding = getOutstandingAmount(lending);
+    totalLended += Number(lending.principalAmount || 0);
     totalOutstanding += outstanding;
-    totalInHand += lending.received;
-    totalInterest += lending.interestAmount;
-    typeBreakdown[lending.type] += lending.principalAmount;
+    totalInHand += Number(lending.received || 0);
+    totalInterest += Number(lending.interestAmount || 0);
+    typeBreakdown[lending.type] += Number(lending.principalAmount || 0);
 
     // Get pending items for next 7 days
     if (lending.schedule && lending.status === 'active') {
@@ -1138,12 +1150,14 @@ async function viewLendingDetails(lendingId) {
       `${(lending.type || '').toUpperCase()} • ${formatDate(lending.date)} • ${(lending.status || '').toUpperCase()}`;
 
     const received = lending.received || 0;
-    const remaining = Math.max(0, (lending.returnAmount || 0) - received);
+    const remaining = lending.type === 'monthly'
+      ? Number(lending.principalAmount || 0)
+      : Math.max(0, (lending.returnAmount || 0) - received);
 
     document.getElementById('details-summary').innerHTML = `
       <div class="breakdown-item">
         <span>Total to Return:</span>
-        <span class="breakdown-amount">₹${(lending.returnAmount || 0).toFixed(2)}</span>
+        <span class="breakdown-amount">₹${(lending.type === 'monthly' ? (lending.principalAmount || 0) : (lending.returnAmount || 0)).toFixed(2)}</span>
       </div>
       <div class="breakdown-item">
         <span>Amount Received:</span>
@@ -1196,7 +1210,7 @@ function recordPayment(lendingId) {
       const lending = allLendings.find(l => String(l.id) === String(lendingId));
       if (!lending) { alert('Lending not found'); return; }
 
-      const outstanding = Math.max(0, (lending.returnAmount || 0) - (lending.received || 0));
+      const outstanding = getOutstandingAmount(lending);
       const nextUnpaid = (lending.schedule || []).find(item => !item.received);
 
       document.getElementById('payment-person').textContent = lending.name;
@@ -1310,7 +1324,7 @@ async function exportData() {
           type.toUpperCase(), lending.name, lending.date, lending.type,
           lending.principalAmount, lending.returnAmount, lending.interestAmount,
           lending.received || 0,
-          Math.max(0, Number(lending.returnAmount || 0) - Number(lending.received || 0)),
+          lending.type === 'monthly' ? Number(lending.principalAmount || 0) : Math.max(0, Number(lending.returnAmount || 0) - Number(lending.received || 0)),
           lending.notes || ''
         ]));
     });
