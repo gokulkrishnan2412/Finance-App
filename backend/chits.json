@@ -3,7 +3,13 @@
     "id": "1788500482475",
     "personName": "Nivetha Chit",
     "chitAmount": 100000,
-    "payments": [],
+    "payments": [
+      {
+        "date": "2026-07-05",
+        "amount": 8000,
+        "note": ""
+      }
+    ],
     "notes": "Nivetha chit ",
     "createdAt": "2026-09-04T05:41:23.000Z"
   }
