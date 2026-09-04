@@ -1,1 +1,100 @@
-[]
+[
+  {
+    "id": "1788499810209",
+    "name": "Arun Anna Auto",
+    "date": "2026-08-14",
+    "principalAmount": 13000,
+    "returnAmount": 20000,
+    "interestAmount": 7000,
+    "type": "weekly",
+    "notes": "",
+    "received": 0,
+    "payments": [],
+    "status": "active",
+    "createdAt": "2026-09-04T05:30:10.209Z",
+    "duration": 10,
+    "weeklyAmount": 2000,
+    "schedule": [
+      {
+        "week": 1,
+        "amount": 2000,
+        "dueDate": "2026-08-14",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "week": 2,
+        "amount": 2000,
+        "dueDate": "2026-08-21",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "week": 3,
+        "amount": 2000,
+        "dueDate": "2026-08-28",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "week": 4,
+        "amount": 2000,
+        "dueDate": "2026-09-04",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "week": 5,
+        "amount": 2000,
+        "dueDate": "2026-09-11",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "week": 6,
+        "amount": 2000,
+        "dueDate": "2026-09-18",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "week": 7,
+        "amount": 2000,
+        "dueDate": "2026-09-25",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "week": 8,
+        "amount": 2000,
+        "dueDate": "2026-10-02",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "week": 9,
+        "amount": 2000,
+        "dueDate": "2026-10-09",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "week": 10,
+        "amount": 2000,
+        "dueDate": "2026-10-16",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      }
+    ]
+  }
+]
