@@ -31,7 +31,12 @@
     "loanAmount": 227000,
     "monthlyInterest": 1400,
     "notes": "",
-    "interestPayments": [],
+    "interestPayments": [
+      {
+        "date": "2026-02-21",
+        "amount": 10000
+      }
+    ],
     "createdAt": "2026-09-04T05:53:39.385Z"
   }
 ]
