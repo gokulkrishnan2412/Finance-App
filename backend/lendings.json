@@ -474,5 +474,119 @@
         "receivedAmount": 0
       }
     ]
+  },
+  {
+    "id": "1788500380876",
+    "name": "Rasu",
+    "date": "2026-05-11",
+    "principalAmount": 30000,
+    "returnAmount": 30000,
+    "interestAmount": 1200,
+    "type": "monthly",
+    "notes": "",
+    "received": 0,
+    "payments": [],
+    "status": "active",
+    "createdAt": "2026-09-04T05:39:40.876Z",
+    "duration": 12,
+    "monthlyAmount": 2500,
+    "schedule": [
+      {
+        "month": 1,
+        "amount": 2500,
+        "dueDate": "2026-05-11",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 2,
+        "amount": 2500,
+        "dueDate": "2026-06-11",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 3,
+        "amount": 2500,
+        "dueDate": "2026-07-11",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 4,
+        "amount": 2500,
+        "dueDate": "2026-08-11",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 5,
+        "amount": 2500,
+        "dueDate": "2026-09-11",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 6,
+        "amount": 2500,
+        "dueDate": "2026-10-11",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 7,
+        "amount": 2500,
+        "dueDate": "2026-11-11",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 8,
+        "amount": 2500,
+        "dueDate": "2026-12-11",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 9,
+        "amount": 2500,
+        "dueDate": "2027-01-11",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 10,
+        "amount": 2500,
+        "dueDate": "2027-02-11",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 11,
+        "amount": 2500,
+        "dueDate": "2027-03-11",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 12,
+        "amount": 2500,
+        "dueDate": "2027-04-11",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      }
+    ]
   }
 ]
