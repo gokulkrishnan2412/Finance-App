@@ -23,5 +23,15 @@
       }
     ],
     "createdAt": "2026-09-04T05:51:29.911Z"
+  },
+  {
+    "id": "1788501218527",
+    "bankName": "BOB Bank-2 Lakh Loan",
+    "date": "2025-11-15",
+    "loanAmount": 227000,
+    "monthlyInterest": 1400,
+    "notes": "",
+    "interestPayments": [],
+    "createdAt": "2026-09-04T05:53:39.385Z"
   }
 ]
