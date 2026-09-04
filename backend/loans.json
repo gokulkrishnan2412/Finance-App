@@ -8,5 +8,15 @@
     "notes": "Need to pay every year. Payir kadan",
     "interestPayments": [],
     "createdAt": "2026-09-04T05:49:53.706Z"
+  },
+  {
+    "id": "1788501089160",
+    "bankName": "BOB Bank",
+    "date": "2026-02-02",
+    "loanAmount": 100000,
+    "monthlyInterest": 700,
+    "notes": "1 Lakh gold loan",
+    "interestPayments": [],
+    "createdAt": "2026-09-04T05:51:29.911Z"
   }
 ]
