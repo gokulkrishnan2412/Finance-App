@@ -343,5 +343,119 @@
         "receivedAmount": 0
       }
     ]
+  },
+  {
+    "id": "1788500217692",
+    "name": "Amsa Sasima",
+    "date": "2026-04-07",
+    "principalAmount": 50000,
+    "returnAmount": 50000,
+    "interestAmount": 2000,
+    "type": "monthly",
+    "notes": "",
+    "received": 0,
+    "payments": [],
+    "status": "active",
+    "createdAt": "2026-09-04T05:36:57.692Z",
+    "duration": 12,
+    "monthlyAmount": 4166.666666666667,
+    "schedule": [
+      {
+        "month": 1,
+        "amount": 4166.666666666667,
+        "dueDate": "2026-04-07",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 2,
+        "amount": 4166.666666666667,
+        "dueDate": "2026-05-07",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 3,
+        "amount": 4166.666666666667,
+        "dueDate": "2026-06-07",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 4,
+        "amount": 4166.666666666667,
+        "dueDate": "2026-07-07",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 5,
+        "amount": 4166.666666666667,
+        "dueDate": "2026-08-07",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 6,
+        "amount": 4166.666666666667,
+        "dueDate": "2026-09-07",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 7,
+        "amount": 4166.666666666667,
+        "dueDate": "2026-10-07",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 8,
+        "amount": 4166.666666666667,
+        "dueDate": "2026-11-07",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 9,
+        "amount": 4166.666666666667,
+        "dueDate": "2026-12-07",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 10,
+        "amount": 4166.666666666667,
+        "dueDate": "2027-01-07",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 11,
+        "amount": 4166.666666666667,
+        "dueDate": "2027-02-07",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 12,
+        "amount": 4166.666666666667,
+        "dueDate": "2027-03-07",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      }
+    ]
   }
 ]
