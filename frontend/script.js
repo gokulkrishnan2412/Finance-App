@@ -864,7 +864,28 @@ async function viewLoanHistory(loanId) {
   const response = await apiFetch('/get_loans');
   const loan = (await response.json()).find(item => String(item.id) === String(loanId));
   const payments = loan ? loan.interestPayments || [] : [];
-  alert(payments.length ? payments.map(payment => `${formatDate(payment.date)}: ₹${Number(payment.amount).toFixed(2)}`).join('\n') : 'No interest payments recorded yet.');
+  document.getElementById('loan-history-title').textContent = `${loan ? loan.bankName : 'Loan'} Payment History`;
+  const historyContent = document.getElementById('loan-history-content');
+  if (payments.length === 0) {
+    historyContent.innerHTML = '<p style="text-align: center; color: #999;">No interest payments recorded yet.</p>';
+  } else {
+    const totalPaid = payments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+    historyContent.innerHTML = `
+      <table class="payments-table">
+        <thead><tr><th>Date</th><th>Amount</th></tr></thead>
+        <tbody>
+          ${payments.slice().reverse().map(payment => `
+            <tr><td>${formatDate(payment.date)}</td><td>₹${Number(payment.amount || 0).toFixed(2)}</td></tr>
+          `).join('')}
+          <tr class="payments-total-row"><td><strong>Total Paid</strong></td><td><strong>₹${totalPaid.toFixed(2)}</strong></td></tr>
+        </tbody>
+      </table>`;
+  }
+  document.getElementById('loan-history-modal').style.display = 'flex';
+}
+
+function closeLoanHistoryModal() {
+  document.getElementById('loan-history-modal').style.display = 'none';
 }
 
 async function deleteLoan(loanId) {
@@ -1280,8 +1301,11 @@ document.getElementById('chit-payment-modal').addEventListener('click', (e) => {
 document.getElementById('chit-history-modal').addEventListener('click', (e) => {
   if (e.target.id === 'chit-history-modal') closeChitHistoryModal();
 });
+document.getElementById('loan-history-modal').addEventListener('click', (e) => {
+  if (e.target.id === 'loan-history-modal') closeLoanHistoryModal();
+});
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') { closePaymentModal(); closeLoanInterestModal(); closeChitPaymentModal(); closeChitHistoryModal(); closeDetailsModal(); }
+  if (e.key === 'Escape') { closePaymentModal(); closeLoanInterestModal(); closeChitPaymentModal(); closeChitHistoryModal(); closeLoanHistoryModal(); closeDetailsModal(); }
 });
 document.getElementById('details-modal').addEventListener('click', (e) => {
   if (e.target.id === 'details-modal') closeDetailsModal();
