@@ -611,8 +611,13 @@
     "interestAmount": 2000,
     "type": "monthly",
     "notes": "Given to Nivetha machan- Arun",
-    "received": 0,
-    "payments": [],
+    "received": 2000,
+    "payments": [
+      {
+        "date": "2026-09-01",
+        "amount": 2000
+      }
+    ],
     "status": "active",
     "createdAt": "2026-09-04T05:45:12.500Z",
     "duration": 12,
@@ -624,7 +629,7 @@
         "dueDate": "2026-07-22",
         "received": false,
         "receivedDate": null,
-        "receivedAmount": 0
+        "receivedAmount": 2000
       },
       {
         "month": 2,
