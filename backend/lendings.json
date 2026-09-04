@@ -601,5 +601,119 @@
         "receivedAmount": 0
       }
     ]
+  },
+  {
+    "id": "1788500712500",
+    "name": "Nivetha Machan",
+    "date": "2026-07-22",
+    "principalAmount": 50000,
+    "returnAmount": 50000,
+    "interestAmount": 2000,
+    "type": "monthly",
+    "notes": "Given to Nivetha machan- Arun",
+    "received": 0,
+    "payments": [],
+    "status": "active",
+    "createdAt": "2026-09-04T05:45:12.500Z",
+    "duration": 12,
+    "monthlyAmount": 4166.666666666667,
+    "schedule": [
+      {
+        "month": 1,
+        "amount": 4166.666666666667,
+        "dueDate": "2026-07-22",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 2,
+        "amount": 4166.666666666667,
+        "dueDate": "2026-08-22",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 3,
+        "amount": 4166.666666666667,
+        "dueDate": "2026-09-22",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 4,
+        "amount": 4166.666666666667,
+        "dueDate": "2026-10-22",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 5,
+        "amount": 4166.666666666667,
+        "dueDate": "2026-11-22",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 6,
+        "amount": 4166.666666666667,
+        "dueDate": "2026-12-22",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 7,
+        "amount": 4166.666666666667,
+        "dueDate": "2027-01-22",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 8,
+        "amount": 4166.666666666667,
+        "dueDate": "2027-02-22",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 9,
+        "amount": 4166.666666666667,
+        "dueDate": "2027-03-22",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 10,
+        "amount": 4166.666666666667,
+        "dueDate": "2027-04-22",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 11,
+        "amount": 4166.666666666667,
+        "dueDate": "2027-05-22",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 12,
+        "amount": 4166.666666666667,
+        "dueDate": "2027-06-22",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      }
+    ]
   }
 ]
