@@ -230,10 +230,14 @@
     "interestAmount": 500,
     "type": "monthly",
     "notes": "Given to nivi at chit date",
-    "received": 500,
+    "received": 1000,
     "payments": [
       {
         "date": "2026-07-05",
+        "amount": 500
+      },
+      {
+        "date": "2026-08-11",
         "amount": 500
       }
     ],
@@ -248,7 +252,7 @@
         "dueDate": "2026-06-05",
         "received": false,
         "receivedDate": null,
-        "receivedAmount": 500
+        "receivedAmount": 1000
       },
       {
         "month": 2,
