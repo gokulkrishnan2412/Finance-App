@@ -484,8 +484,13 @@
     "interestAmount": 1200,
     "type": "monthly",
     "notes": "",
-    "received": 0,
-    "payments": [],
+    "received": 1200,
+    "payments": [
+      {
+        "date": "2026-06-11",
+        "amount": 1200
+      }
+    ],
     "status": "active",
     "createdAt": "2026-09-04T05:39:40.876Z",
     "duration": 12,
@@ -497,7 +502,7 @@
         "dueDate": "2026-05-11",
         "received": false,
         "receivedDate": null,
-        "receivedAmount": 0
+        "receivedAmount": 1200
       },
       {
         "month": 2,
