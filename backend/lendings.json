@@ -220,5 +220,119 @@
         "receivedAmount": 0
       }
     ]
+  },
+  {
+    "id": "1788500034252",
+    "name": "Nivi ",
+    "date": "2026-06-05",
+    "principalAmount": 10000,
+    "returnAmount": 10000,
+    "interestAmount": 500,
+    "type": "monthly",
+    "notes": "Given to nivi at chit date",
+    "received": 0,
+    "payments": [],
+    "status": "active",
+    "createdAt": "2026-09-04T05:33:54.252Z",
+    "duration": 12,
+    "monthlyAmount": 833.3333333333334,
+    "schedule": [
+      {
+        "month": 1,
+        "amount": 833.3333333333334,
+        "dueDate": "2026-06-05",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 2,
+        "amount": 833.3333333333334,
+        "dueDate": "2026-07-05",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 3,
+        "amount": 833.3333333333334,
+        "dueDate": "2026-08-05",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 4,
+        "amount": 833.3333333333334,
+        "dueDate": "2026-09-05",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 5,
+        "amount": 833.3333333333334,
+        "dueDate": "2026-10-05",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 6,
+        "amount": 833.3333333333334,
+        "dueDate": "2026-11-05",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 7,
+        "amount": 833.3333333333334,
+        "dueDate": "2026-12-05",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 8,
+        "amount": 833.3333333333334,
+        "dueDate": "2027-01-05",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 9,
+        "amount": 833.3333333333334,
+        "dueDate": "2027-02-05",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 10,
+        "amount": 833.3333333333334,
+        "dueDate": "2027-03-05",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 11,
+        "amount": 833.3333333333334,
+        "dueDate": "2027-04-05",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "month": 12,
+        "amount": 833.3333333333334,
+        "dueDate": "2027-05-05",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      }
+    ]
   }
 ]
