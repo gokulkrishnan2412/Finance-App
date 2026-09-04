@@ -16,7 +16,12 @@
     "loanAmount": 100000,
     "monthlyInterest": 700,
     "notes": "1 Lakh gold loan",
-    "interestPayments": [],
+    "interestPayments": [
+      {
+        "date": "2026-08-03",
+        "amount": 20000
+      }
+    ],
     "createdAt": "2026-09-04T05:51:29.911Z"
   }
 ]
