@@ -209,18 +209,19 @@
             <div class="metric-label">OUTSTANDING</div>
             <div class="metric-value expense">₹<span id="daily-outstanding">0</span></div>
           </div>
-          <div class="metric-card">
-            <div class="metric-label">TOTAL INTEREST</div>
-            <div class="metric-value">₹<span id="daily-total-interest">0</span></div>
-          </div>
         </div>
 
         <!-- Lendings List -->
         <div class="lendings-section">
           <h2>Daily Lendings</h2>
-          <div id="daily-lendings-list" class="lendings-list">
+          <div class="lending-status-tabs" role="tablist" aria-label="Daily lending status">
+            <button type="button" class="status-tab active" data-lending-type="daily" data-status="active">Active</button>
+            <button type="button" class="status-tab" data-lending-type="daily" data-status="closed">Closed</button>
+          </div>
+          <div id="daily-lendings-list" class="lendings-list lending-status-list" data-status="active">
             <!-- Lendings will be populated here -->
           </div>
+          <div id="daily-closed-lendings-list" class="lendings-list lending-status-list" data-status="closed" hidden></div>
         </div>
       </div>
 
@@ -245,18 +246,19 @@
             <div class="metric-label">OUTSTANDING</div>
             <div class="metric-value expense">₹<span id="weekly-outstanding">0</span></div>
           </div>
-          <div class="metric-card">
-            <div class="metric-label">TOTAL INTEREST</div>
-            <div class="metric-value">₹<span id="weekly-total-interest">0</span></div>
-          </div>
         </div>
 
         <!-- Lendings List -->
         <div class="lendings-section">
           <h2>Weekly Lendings</h2>
-          <div id="weekly-lendings-list" class="lendings-list">
+          <div class="lending-status-tabs" role="tablist" aria-label="Weekly lending status">
+            <button type="button" class="status-tab active" data-lending-type="weekly" data-status="active">Active</button>
+            <button type="button" class="status-tab" data-lending-type="weekly" data-status="closed">Closed</button>
+          </div>
+          <div id="weekly-lendings-list" class="lendings-list lending-status-list" data-status="active">
             <!-- Lendings will be populated here -->
           </div>
+          <div id="weekly-closed-lendings-list" class="lendings-list lending-status-list" data-status="closed" hidden></div>
         </div>
       </div>
 
@@ -281,18 +283,19 @@
             <div class="metric-label">OUTSTANDING</div>
             <div class="metric-value expense">₹<span id="monthly-outstanding">0</span></div>
           </div>
-          <div class="metric-card">
-            <div class="metric-label">TOTAL INTEREST</div>
-            <div class="metric-value">₹<span id="monthly-total-interest">0</span></div>
-          </div>
         </div>
 
         <!-- Lendings List -->
         <div class="lendings-section">
           <h2>Monthly Lendings</h2>
-          <div id="monthly-lendings-list" class="lendings-list">
+          <div class="lending-status-tabs" role="tablist" aria-label="Monthly lending status">
+            <button type="button" class="status-tab active" data-lending-type="monthly" data-status="active">Active</button>
+            <button type="button" class="status-tab" data-lending-type="monthly" data-status="closed">Closed</button>
+          </div>
+          <div id="monthly-lendings-list" class="lendings-list lending-status-list" data-status="active">
             <!-- Lendings will be populated here -->
           </div>
+          <div id="monthly-closed-lendings-list" class="lendings-list lending-status-list" data-status="closed" hidden></div>
         </div>
       </div>
 
@@ -329,7 +332,12 @@
 
         <div class="lendings-section">
           <h2>My Chits</h2>
-          <div id="chit-list" class="lendings-list"></div>
+          <div class="lending-status-tabs" role="tablist" aria-label="Chit status">
+            <button type="button" class="status-tab active" data-record-type="chit" data-status="active">Active</button>
+            <button type="button" class="status-tab" data-record-type="chit" data-status="closed">Closed</button>
+          </div>
+          <div id="chit-list" class="lendings-list lending-status-list" data-status="active"></div>
+          <div id="closed-chit-list" class="lendings-list lending-status-list" data-status="closed" hidden></div>
         </div>
       </div>
 
@@ -342,7 +350,6 @@
 
         <div class="metrics-grid loan-metrics">
           <div class="metric-card"><div class="metric-label">TOTAL BORROWED</div><div class="metric-value">₹<span id="loans-total-amount">0.00</span></div></div>
-          <div class="metric-card"><div class="metric-label">PENDING THIS MONTH</div><div class="metric-value expense">₹<span id="loans-pending-interest">0.00</span></div></div>
           <div class="metric-card"><div class="metric-label">INTEREST PAID</div><div class="metric-value income">₹<span id="loans-interest-paid">0.00</span></div></div>
         </div>
 
@@ -351,7 +358,12 @@
             <h2>My Loans</h2>
             <button type="button" class="btn-small" onclick="exportLoanReport()">📥 Export Loans CSV</button>
           </div>
-          <div id="loans-list" class="lendings-list"></div>
+          <div class="lending-status-tabs" role="tablist" aria-label="Loan status">
+            <button type="button" class="status-tab active" data-record-type="loan" data-status="active">Active</button>
+            <button type="button" class="status-tab" data-record-type="loan" data-status="closed">Closed</button>
+          </div>
+          <div id="loans-list" class="lendings-list lending-status-list" data-status="active"></div>
+          <div id="closed-loans-list" class="lendings-list lending-status-list" data-status="closed" hidden></div>
         </div>
       </div>
 
@@ -402,13 +414,6 @@
           </div>
         </div>
 
-        <!-- Pending Collections -->
-        <div class="pending-collections">
-          <h3>Pending Collections (Next 7 Days)</h3>
-          <div id="pending-list" class="pending-list">
-            <!-- Pending collections will be populated here -->
-          </div>
-        </div>
       </div>
 
       <!-- Settings Page -->

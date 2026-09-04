@@ -215,6 +215,26 @@ async function handleGithubApi(path, options = {}) {
       return { ok: true, status: 200, json: async () => ({ status: 'success' }) };
     }
 
+    if (endpoint === 'close_lending') {
+      const { data } = await fetchGithubFile('backend/lendings.json');
+      const lending = data.find(l => String(l.id) === String(itemId));
+      if (!lending) throw new Error('Lending record not found');
+      lending.status = 'closed';
+      lending.closedAt = new Date().toISOString();
+      await saveGithubFile('backend/lendings.json', data, `Close lending: ${lending.name || itemId}`);
+      return { ok: true, status: 200, json: async () => ({ status: 'success', lending }) };
+    }
+
+    if (endpoint === 'reopen_lending') {
+      const { data } = await fetchGithubFile('backend/lendings.json');
+      const lending = data.find(l => String(l.id) === String(itemId));
+      if (!lending) throw new Error('Lending record not found');
+      lending.status = 'active';
+      delete lending.closedAt;
+      await saveGithubFile('backend/lendings.json', data, `Reopen lending: ${lending.name || itemId}`);
+      return { ok: true, status: 200, json: async () => ({ status: 'success', lending }) };
+    }
+
     // 2. LOANS
     if (endpoint === 'get_loans') {
       const { data } = await fetchGithubFile('backend/loans.json');
@@ -260,6 +280,17 @@ async function handleGithubApi(path, options = {}) {
       return { ok: true, status: 200, json: async () => ({ status: 'success' }) };
     }
 
+    if (endpoint === 'close_loan' || endpoint === 'reopen_loan') {
+      const { data } = await fetchGithubFile('backend/loans.json');
+      const loan = data.find(l => String(l.id) === String(itemId));
+      if (!loan) throw new Error('Loan not found');
+      loan.status = endpoint === 'close_loan' ? 'closed' : 'active';
+      if (endpoint === 'close_loan') loan.closedAt = new Date().toISOString();
+      else delete loan.closedAt;
+      await saveGithubFile('backend/loans.json', data, `${endpoint === 'close_loan' ? 'Close' : 'Reopen'} loan: ${loan.bankName || itemId}`);
+      return { ok: true, status: 200, json: async () => ({ status: 'success', loan }) };
+    }
+
     // 3. CHITS
     if (endpoint === 'get_chits') {
       const { data } = await fetchGithubFile('backend/chits.json');
@@ -302,6 +333,17 @@ async function handleGithubApi(path, options = {}) {
       const filtered = data.filter(c => String(c.id) !== String(itemId));
       await saveGithubFile('backend/chits.json', filtered, `Delete chit ${itemId}`);
       return { ok: true, status: 200, json: async () => ({ status: 'success' }) };
+    }
+
+    if (endpoint === 'close_chit' || endpoint === 'reopen_chit') {
+      const { data } = await fetchGithubFile('backend/chits.json');
+      const chit = data.find(c => String(c.id) === String(itemId));
+      if (!chit) throw new Error('Chit not found');
+      chit.status = endpoint === 'close_chit' ? 'closed' : 'active';
+      if (endpoint === 'close_chit') chit.closedAt = new Date().toISOString();
+      else delete chit.closedAt;
+      await saveGithubFile('backend/chits.json', data, `${endpoint === 'close_chit' ? 'Close' : 'Reopen'} chit: ${chit.personName || itemId}`);
+      return { ok: true, status: 200, json: async () => ({ status: 'success', chit }) };
     }
 
     // 4. CLEAR ALL
@@ -415,6 +457,15 @@ window.fetch = async (url, options = {}) => {
 function apiFetch(path, options = {}) {
   const absolutePath = path.startsWith('http') ? path : `${localApiOrigin}${path.startsWith('/') ? path : `/${path}`}`;
   return fetch(absolutePath, options);
+}
+
+async function readApiResult(response) {
+  const responseText = await response.text();
+  try {
+    return responseText ? JSON.parse(responseText) : {};
+  } catch (error) {
+    throw new Error(`Server returned ${response.status} ${response.statusText || 'with an invalid response'}`);
+  }
 }
 
 function updateDeviceToggle() {
@@ -630,14 +681,17 @@ async function loadChits() {
   try {
     const response = await apiFetch('/get_chits');
     if (!response.ok) throw new Error('Unable to load chits');
-    displayChits(await response.json());
+    const chitsData = await response.json();
+    displayChits(chitsData.filter(chit => chit.status !== 'closed'), 'active');
+    displayChits(chitsData.filter(chit => chit.status === 'closed'), 'closed');
+    updateChitMetrics(chitsData);
   } catch (error) {
     console.error('Error loading chits:', error);
   }
 }
 
-function displayChits(chitsData) {
-  const list = document.getElementById('chit-list');
+function displayChits(chitsData, status = 'active') {
+  const list = document.getElementById(status === 'closed' ? 'closed-chit-list' : 'chit-list');
   let totalAmount = 0;
   let totalPaid = 0;
   let totalRemaining = 0;
@@ -660,7 +714,7 @@ function displayChits(chitsData) {
           <div class="lending-name">${chit.personName}</div>
           <div class="lending-meta">CHIT RECORD</div>
         </div></div>
-        <div class="lending-status">ACTIVE</div>
+        <div class="lending-status">${(chit.status || 'active').toUpperCase()}</div>
       </div>
       <div class="lending-amounts">
         <div class="amount-item"><span class="amount-label">Chit Amount</span><span class="amount-value">₹${amount.toFixed(2)}</span></div>
@@ -669,7 +723,8 @@ function displayChits(chitsData) {
       </div>
       ${chit.notes ? `<p class="loan-notes">${chit.notes}</p>` : ''}
       <div class="lending-actions">
-        <button class="btn-small btn-secondary" onclick="recordChitPayment('${chit.id}')">Record Payment</button>
+        ${status === 'closed' ? `<button class="btn-small btn-secondary" onclick="reopenChit('${chit.id}')">Reopen Chit</button>` : `<button class="btn-small btn-secondary" onclick="recordChitPayment('${chit.id}')">Record Payment</button>
+        <button class="btn-small btn-danger" onclick="closeChit('${chit.id}')">Close Chit</button>`}
         <button class="btn-small" onclick="viewChitHistory('${chit.id}')">Payment History (${payments.length})</button>
         <button class="btn-small btn-danger" onclick="deleteChit('${chit.id}')">Delete</button>
       </div>`;
@@ -677,8 +732,23 @@ function displayChits(chitsData) {
   });
 
   if (chitsData.length === 0) {
-    list.innerHTML = '<p style="text-align: center; color: #999;">No chits yet. Add one above to get started!</p>';
+    list.innerHTML = `<p style="text-align: center; color: #999;">No ${status} chits.</p>`;
   }
+}
+
+function updateChitMetrics(chitsData) {
+  let totalAmount = 0;
+  let totalPaid = 0;
+  let totalRemaining = 0;
+
+  chitsData.forEach(chit => {
+    const amount = Number(chit.chitAmount || 0);
+    const paid = (chit.payments || []).reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+    totalAmount += amount;
+    totalPaid += paid;
+    totalRemaining += Math.max(0, amount - paid);
+  });
+
   document.getElementById('chit-total-amount').textContent = totalAmount.toFixed(2);
   document.getElementById('chit-total-paid').textContent = totalPaid.toFixed(2);
   document.getElementById('chit-total-remaining').textContent = totalRemaining.toFixed(2);
@@ -763,34 +833,41 @@ async function deleteChit(chitId) {
   else alert('Error deleting chit');
 }
 
+async function updateChitStatus(chitId, status) {
+  if (!confirm(`${status === 'closed' ? 'Close' : 'Reopen'} this chit?`)) return;
+  const response = await apiFetch(`/${status === 'closed' ? 'close' : 'reopen'}_chit/${chitId}`, { method: 'POST' });
+  const result = await response.json();
+  if (!response.ok || result.status !== 'success') throw new Error(result.message || 'Unable to update chit');
+  loadChits();
+}
+
+function closeChit(chitId) { return updateChitStatus(chitId, 'closed').catch(error => alert(`Error closing chit: ${error.message}`)); }
+function reopenChit(chitId) { return updateChitStatus(chitId, 'active').catch(error => alert(`Error reopening chit: ${error.message}`)); }
+
 // ============ LOANS ==========
 async function loadLoans() {
   try {
     const response = await apiFetch('/get_loans');
     if (!response.ok) throw new Error('Unable to load loans');
-    displayLoans(await response.json());
+    const loansData = await response.json();
+    displayLoans(loansData.filter(loan => loan.status !== 'closed'), 'active');
+    displayLoans(loansData.filter(loan => loan.status === 'closed'), 'closed');
+    updateLoanMetrics(loansData);
   } catch (error) {
     console.error('Error loading loans:', error);
   }
 }
 
-function displayLoans(loansData) {
-  const list = document.getElementById('loans-list');
+function displayLoans(loansData, status = 'active') {
+  const list = document.getElementById(status === 'closed' ? 'closed-loans-list' : 'loans-list');
   let totalAmount = 0;
-  let pendingInterest = 0;
   let interestPaid = 0;
   list.innerHTML = '';
 
   loansData.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(loan => {
     const payments = loan.interestPayments || [];
     const paid = payments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
-    const currentMonth = new Date().toISOString().slice(0, 7);
-    const paidThisMonth = payments
-      .filter(payment => String(payment.date || '').slice(0, 7) === currentMonth)
-      .reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
-    const pending = Math.max(0, Number(loan.monthlyInterest || 0) - paidThisMonth);
     totalAmount += Number(loan.loanAmount || 0);
-    pendingInterest += pending;
     interestPaid += paid;
 
     const item = document.createElement('div');
@@ -801,16 +878,16 @@ function displayLoans(loansData) {
           <div class="lending-name">${loan.bankName}</div>
           <div class="lending-meta">LOAN DATE • ${formatDate(loan.date)}</div>
         </div></div>
-        <div class="lending-status">ACTIVE</div>
+        <div class="lending-status">${status.toUpperCase()}</div>
       </div>
       <div class="lending-amounts">
         <div class="amount-item"><span class="amount-label">Principal</span><span class="amount-value">₹${Number(loan.loanAmount || 0).toFixed(2)}</span></div>
-        <div class="amount-item"><span class="amount-label">Pending This Month</span><span class="amount-value interest">₹${pending.toFixed(2)}</span></div>
         <div class="amount-item"><span class="amount-label">Interest Paid</span><span class="amount-value">₹${paid.toFixed(2)}</span></div>
       </div>
       ${loan.notes ? `<p class="loan-notes">${loan.notes}</p>` : ''}
       <div class="lending-actions">
-        <button class="btn-small btn-secondary" onclick="recordLoanInterest('${loan.id}')">Record Interest</button>
+        ${status === 'closed' ? `<button class="btn-small btn-secondary" onclick="reopenLoan('${loan.id}')">Reopen Loan</button>` : `<button class="btn-small btn-secondary" onclick="recordLoanInterest('${loan.id}')">Record Interest</button>
+        <button class="btn-small btn-danger" onclick="closeLoan('${loan.id}')">Close Loan</button>`}
         <button class="btn-small" onclick="viewLoanHistory('${loan.id}')">Payment History (${payments.length})</button>
         <button class="btn-small btn-danger" onclick="deleteLoan('${loan.id}')">Delete</button>
       </div>`;
@@ -818,10 +895,16 @@ function displayLoans(loansData) {
   });
 
   if (loansData.length === 0) {
-    list.innerHTML = '<p style="text-align: center; color: #999;">No bank loans yet. Add one above to get started!</p>';
+    list.innerHTML = `<p style="text-align: center; color: #999;">No ${status} bank loans.</p>`;
   }
+}
+
+function updateLoanMetrics(loansData) {
+  const totalAmount = loansData.reduce((sum, loan) => sum + Number(loan.loanAmount || 0), 0);
+  const interestPaid = loansData.reduce((sum, loan) => sum + (loan.interestPayments || [])
+    .reduce((loanTotal, payment) => loanTotal + Number(payment.amount || 0), 0), 0);
+
   document.getElementById('loans-total-amount').textContent = totalAmount.toFixed(2);
-  document.getElementById('loans-pending-interest').textContent = pendingInterest.toFixed(2);
   document.getElementById('loans-interest-paid').textContent = interestPaid.toFixed(2);
 }
 
@@ -895,6 +978,17 @@ async function deleteLoan(loanId) {
   else alert('Error deleting loan');
 }
 
+async function updateLoanStatus(loanId, status) {
+  if (!confirm(`${status === 'closed' ? 'Close' : 'Reopen'} this loan?`)) return;
+  const response = await apiFetch(`/${status === 'closed' ? 'close' : 'reopen'}_loan/${loanId}`, { method: 'POST' });
+  const result = await response.json();
+  if (!response.ok || result.status !== 'success') throw new Error(result.message || 'Unable to update loan');
+  loadLoans();
+}
+
+function closeLoan(loanId) { return updateLoanStatus(loanId, 'closed').catch(error => alert(`Error closing loan: ${error.message}`)); }
+function reopenLoan(loanId) { return updateLoanStatus(loanId, 'active').catch(error => alert(`Error reopening loan: ${error.message}`)); }
+
 // ============ GENERATE SCHEDULES ============
 function generateWeeklySchedule(weeks, weeklyAmount, startDate) {
   const schedule = [];
@@ -959,23 +1053,24 @@ async function loadDashboard(type) {
     // Filter lendings by type
     const filteredLendings = allLendings.filter(lending => lending.type === type);
 
-    // Display lendings
-    displayLendingsByType(filteredLendings, type);
+    // Display active and closed lendings separately while preserving all record data.
+    displayLendingsByType(filteredLendings.filter(lending => lending.status !== 'closed'), type, 'active');
+    displayLendingsByType(filteredLendings.filter(lending => lending.status === 'closed'), type, 'closed');
 
-    // Update metrics for this type
-    updateDashboardMetricsByType(filteredLendings, type);
+    // Closed records remain available in their tab but do not count as active metrics.
+    updateDashboardMetricsByType(filteredLendings.filter(lending => lending.status !== 'closed'), type);
   } catch (error) {
     console.error('Error loading dashboard:', error);
   }
 }
 
-function displayLendingsByType(lendingsData, type) {
-  const listElementId = `${type}-lendings-list`;
+function displayLendingsByType(lendingsData, type, status = 'active') {
+  const listElementId = status === 'closed' ? `${type}-closed-lendings-list` : `${type}-lendings-list`;
   const list = document.getElementById(listElementId);
   list.innerHTML = '';
 
   if (lendingsData.length === 0) {
-    list.innerHTML = `<p style="text-align: center; color: #999;">No ${type} lendings yet. Add one to get started!</p>`;
+    list.innerHTML = `<p style="text-align: center; color: #999;">No ${status} ${type} lendings.</p>`;
     return;
   }
 
@@ -1033,7 +1128,8 @@ function displayLendingsByType(lendingsData, type) {
 
       <div class="lending-actions">
         <button class="btn-small" onclick="viewLendingDetails('${lending.id}')">View Details</button>
-        <button class="btn-small btn-secondary" onclick="recordPayment('${lending.id}')">Record Payment</button>
+        ${status === 'active' ? `<button class="btn-small btn-secondary" onclick="recordPayment('${lending.id}')">Record Payment</button>
+        <button class="btn-small btn-danger" onclick="closeLending('${lending.id}')">Close Lending</button>` : `<button class="btn-small btn-secondary" onclick="reopenLending('${lending.id}')">Reopen Lending</button>`}
         <button class="btn-small btn-danger" onclick="deleteLending('${lending.id}')">Delete</button>
       </div>
     `;
@@ -1042,23 +1138,80 @@ function displayLendingsByType(lendingsData, type) {
   });
 }
 
+function selectLendingStatusTab(type, status) {
+  document.querySelectorAll(`.status-tab[data-lending-type="${type}"], .status-tab[data-record-type="${type}"]`).forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.status === status);
+    tab.setAttribute('aria-selected', tab.dataset.status === status ? 'true' : 'false');
+  });
+  const pageId = type === 'chit' ? 'chit' : type === 'loan' ? 'loans' : `dashboard-${type}`;
+  document.querySelectorAll(`#${pageId} .lending-status-list`).forEach(list => {
+    list.hidden = list.dataset.status !== status;
+    list.classList.toggle('is-hidden', list.dataset.status !== status);
+  });
+}
+
+document.querySelectorAll('.status-tab').forEach(tab => {
+  tab.addEventListener('click', () => selectLendingStatusTab(tab.dataset.lendingType || tab.dataset.recordType, tab.dataset.status));
+});
+
+async function closeLending(lendingId) {
+  if (!confirm('Close this lending? It will move to the Closed tab.')) return;
+
+  try {
+    const response = await apiFetch(`/close_lending/${lendingId}`, { method: 'POST' });
+    const result = await response.json();
+    if (!response.ok || result.status !== 'success') {
+      throw new Error(result.message || 'Unable to close lending');
+    }
+
+    await Promise.all([
+      loadDashboard('daily'),
+      loadDashboard('weekly'),
+      loadDashboard('monthly'),
+      loadAnalytics()
+    ]);
+  } catch (error) {
+    console.error('Error closing lending:', error);
+    alert(`Error closing lending: ${error.message}`);
+  }
+}
+
+async function reopenLending(lendingId) {
+  if (!confirm('Reopen this lending? It will move to the Active tab.')) return;
+
+  try {
+    const response = await apiFetch(`/reopen_lending/${lendingId}`, { method: 'POST' });
+    const result = await readApiResult(response);
+    if (!response.ok || result.status !== 'success') {
+      throw new Error(result.message || 'Unable to reopen lending');
+    }
+
+    await Promise.all([
+      loadDashboard('daily'),
+      loadDashboard('weekly'),
+      loadDashboard('monthly'),
+      loadAnalytics()
+    ]);
+  } catch (error) {
+    console.error('Error reopening lending:', error);
+    alert(`Error reopening lending: ${error.message}`);
+  }
+}
+
 function updateDashboardMetricsByType(lendingsData, type) {
   let totalLent = 0;
   let totalReceived = 0;
   let totalOutstanding = 0;
-  let totalInterest = 0;
 
   lendingsData.forEach(lending => {
     totalLent += Number(lending.principalAmount || 0);
     totalReceived += Number(lending.received || 0);
     totalOutstanding += getOutstandingAmount(lending);
-    totalInterest += Number(lending.interestAmount || 0);
   });
 
   document.getElementById(`${type}-total-lent`).textContent = totalLent.toFixed(2);
   document.getElementById(`${type}-total-received`).textContent = totalReceived.toFixed(2);
   document.getElementById(`${type}-outstanding`).textContent = totalOutstanding.toFixed(2);
-  document.getElementById(`${type}-total-interest`).textContent = totalInterest.toFixed(2);
 }
 
 // ============ ANALYTICS ============
@@ -1078,7 +1231,6 @@ function displayAnalytics(lendingsData) {
   let totalInHand = 0;
   let totalInterest = 0;
   const typeBreakdown = { weekly: 0, daily: 0, monthly: 0 };
-  let pendingCollections = [];
 
   lendingsData.forEach(lending => {
     const outstanding = getOutstandingAmount(lending);
@@ -1088,26 +1240,6 @@ function displayAnalytics(lendingsData) {
     totalInterest += Number(lending.interestAmount || 0);
     typeBreakdown[lending.type] += Number(lending.principalAmount || 0);
 
-    // Get pending items for next 7 days
-    if (lending.schedule && lending.status === 'active') {
-      const today = new Date();
-      const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
-
-      lending.schedule.forEach(item => {
-        if (!item.received) {
-          const dueDate = new Date(item.dueDate);
-          if (dueDate >= today && dueDate <= nextWeek) {
-            pendingCollections.push({
-              person: lending.name,
-              amount: item.amount,
-              dueDate: item.dueDate,
-              type: lending.type,
-              period: item.week || item.day || item.month
-            });
-          }
-        }
-      });
-    }
   });
 
   // Update summary cards
@@ -1134,28 +1266,6 @@ function displayAnalytics(lendingsData) {
     </div>
   `;
 
-  // Update pending collections
-  const pendingList = document.getElementById('pending-list');
-  if (pendingCollections.length === 0) {
-    pendingList.innerHTML = '<p style="text-align: center; color: #999;">No pending collections for the next 7 days</p>';
-  } else {
-    pendingList.innerHTML = '';
-    pendingCollections.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
-
-    pendingCollections.forEach(item => {
-      const pendingItem = document.createElement('div');
-      pendingItem.className = 'pending-item';
-      pendingItem.innerHTML = `
-        <div class="pending-person">${item.person}</div>
-        <div class="pending-details">
-          <span>${item.type.toUpperCase()} ${item.period}</span>
-          <span>${formatDate(item.dueDate)}</span>
-        </div>
-        <div class="pending-amount">₹${item.amount.toFixed(2)}</div>
-      `;
-      pendingList.appendChild(pendingItem);
-    });
-  }
 }
 
 // ============ LENDING ACTIONS ============

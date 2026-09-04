@@ -171,6 +171,34 @@ def delete_lending(lending_id):
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
+@app.route("/close_lending/<lending_id>", methods=["POST"])
+def close_lending(lending_id):
+    try:
+        lending = next((item for item in lendings if str(item.get("id")) == str(lending_id)), None)
+        if not lending:
+            return jsonify({"status": "error", "message": "Lending not found"}), 404
+
+        lending["status"] = "closed"
+        lending["closedAt"] = datetime.now().isoformat()
+        save_lendings()
+        return jsonify({"status": "success", "lending": lending}), 200
+    except Exception as error:
+        return jsonify({"status": "error", "message": str(error)}), 400
+
+@app.route("/reopen_lending/<lending_id>", methods=["POST"])
+def reopen_lending(lending_id):
+    try:
+        lending = next((item for item in lendings if str(item.get("id")) == str(lending_id)), None)
+        if not lending:
+            return jsonify({"status": "error", "message": "Lending not found"}), 404
+
+        lending["status"] = "active"
+        lending.pop("closedAt", None)
+        save_lendings()
+        return jsonify({"status": "success", "lending": lending}), 200
+    except Exception as error:
+        return jsonify({"status": "error", "message": str(error)}), 400
+
 @app.route("/clear_all", methods=["POST"])
 def clear_all():
     try:
@@ -256,6 +284,32 @@ def delete_loan(loan_id):
     except Exception as error:
         return jsonify({"status": "error", "message": str(error)}), 400
 
+@app.route("/close_loan/<loan_id>", methods=["POST"])
+def close_loan(loan_id):
+    try:
+        loan = next((item for item in loans if str(item.get("id")) == str(loan_id)), None)
+        if not loan:
+            return jsonify({"status": "error", "message": "Loan not found"}), 404
+        loan["status"] = "closed"
+        loan["closedAt"] = datetime.now().isoformat()
+        save_loans()
+        return jsonify({"status": "success", "loan": loan}), 200
+    except Exception as error:
+        return jsonify({"status": "error", "message": str(error)}), 400
+
+@app.route("/reopen_loan/<loan_id>", methods=["POST"])
+def reopen_loan(loan_id):
+    try:
+        loan = next((item for item in loans if str(item.get("id")) == str(loan_id)), None)
+        if not loan:
+            return jsonify({"status": "error", "message": "Loan not found"}), 404
+        loan["status"] = "active"
+        loan.pop("closedAt", None)
+        save_loans()
+        return jsonify({"status": "success", "loan": loan}), 200
+    except Exception as error:
+        return jsonify({"status": "error", "message": str(error)}), 400
+
 # ============ CHIT ENDPOINTS ============
 
 @app.route("/add_chit", methods=["POST"])
@@ -330,6 +384,32 @@ def delete_chit(chit_id):
             return jsonify({"status": "error", "message": "Chit not found"}), 404
         save_chits()
         return jsonify({"status": "success"}), 200
+    except Exception as error:
+        return jsonify({"status": "error", "message": str(error)}), 400
+
+@app.route("/close_chit/<chit_id>", methods=["POST"])
+def close_chit(chit_id):
+    try:
+        chit = next((item for item in chits if str(item.get("id")) == str(chit_id)), None)
+        if not chit:
+            return jsonify({"status": "error", "message": "Chit not found"}), 404
+        chit["status"] = "closed"
+        chit["closedAt"] = datetime.now().isoformat()
+        save_chits()
+        return jsonify({"status": "success", "chit": chit}), 200
+    except Exception as error:
+        return jsonify({"status": "error", "message": str(error)}), 400
+
+@app.route("/reopen_chit/<chit_id>", methods=["POST"])
+def reopen_chit(chit_id):
+    try:
+        chit = next((item for item in chits if str(item.get("id")) == str(chit_id)), None)
+        if not chit:
+            return jsonify({"status": "error", "message": "Chit not found"}), 404
+        chit["status"] = "active"
+        chit.pop("closedAt", None)
+        save_chits()
+        return jsonify({"status": "success", "chit": chit}), 200
     except Exception as error:
         return jsonify({"status": "error", "message": str(error)}), 400
 
