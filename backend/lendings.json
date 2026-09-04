@@ -353,8 +353,13 @@
     "interestAmount": 2000,
     "type": "monthly",
     "notes": "",
-    "received": 0,
-    "payments": [],
+    "received": 2000,
+    "payments": [
+      {
+        "date": "2026-05-10",
+        "amount": 2000
+      }
+    ],
     "status": "active",
     "createdAt": "2026-09-04T05:36:57.692Z",
     "duration": 12,
@@ -366,7 +371,7 @@
         "dueDate": "2026-04-07",
         "received": false,
         "receivedDate": null,
-        "receivedAmount": 0
+        "receivedAmount": 2000
       },
       {
         "month": 2,
