@@ -8,8 +8,13 @@
     "interestAmount": 7000,
     "type": "weekly",
     "notes": "",
-    "received": 0,
-    "payments": [],
+    "received": 3000,
+    "payments": [
+      {
+        "date": "2026-08-29",
+        "amount": 3000
+      }
+    ],
     "status": "active",
     "createdAt": "2026-09-04T05:30:10.209Z",
     "duration": 10,
@@ -19,9 +24,9 @@
         "week": 1,
         "amount": 2000,
         "dueDate": "2026-08-14",
-        "received": false,
-        "receivedDate": null,
-        "receivedAmount": 0
+        "received": true,
+        "receivedDate": "2026-08-29",
+        "receivedAmount": 2000
       },
       {
         "week": 2,
@@ -29,7 +34,7 @@
         "dueDate": "2026-08-21",
         "received": false,
         "receivedDate": null,
-        "receivedAmount": 0
+        "receivedAmount": 1000
       },
       {
         "week": 3,
