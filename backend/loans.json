@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "id": "1788500993056",
+    "bankName": "BOB Bank",
+    "date": "2025-09-01",
+    "loanAmount": 132000,
+    "monthlyInterest": 737,
+    "notes": "Need to pay every year. Payir kadan",
+    "interestPayments": [],
+    "createdAt": "2026-09-04T05:49:53.706Z"
+  }
+]
