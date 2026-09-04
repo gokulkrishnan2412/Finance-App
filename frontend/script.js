@@ -723,9 +723,9 @@ function displayChits(chitsData, status = 'active') {
       </div>
       ${chit.notes ? `<p class="loan-notes">${chit.notes}</p>` : ''}
       <div class="lending-actions">
-        ${status === 'closed' ? `<button class="btn-small btn-secondary" onclick="reopenChit('${chit.id}')">Reopen Chit</button>` : `<button class="btn-small btn-secondary" onclick="recordChitPayment('${chit.id}')">Record Payment</button>
-        <button class="btn-small btn-danger" onclick="closeChit('${chit.id}')">Close Chit</button>`}
+        ${status === 'closed' ? `<button class="btn-small btn-secondary" onclick="reopenChit('${chit.id}')">Reopen Chit</button>` : `<button class="btn-small btn-secondary" onclick="recordChitPayment('${chit.id}')">Record Payment</button>`}
         <button class="btn-small" onclick="viewChitHistory('${chit.id}')">Payment History (${payments.length})</button>
+        ${status === 'active' ? `<button class="btn-small btn-danger" onclick="closeChit('${chit.id}')">Close Chit</button>` : ''}
         <button class="btn-small btn-danger" onclick="deleteChit('${chit.id}')">Delete</button>
       </div>`;
     list.appendChild(item);
@@ -886,9 +886,9 @@ function displayLoans(loansData, status = 'active') {
       </div>
       ${loan.notes ? `<p class="loan-notes">${loan.notes}</p>` : ''}
       <div class="lending-actions">
-        ${status === 'closed' ? `<button class="btn-small btn-secondary" onclick="reopenLoan('${loan.id}')">Reopen Loan</button>` : `<button class="btn-small btn-secondary" onclick="recordLoanInterest('${loan.id}')">Record Interest</button>
-        <button class="btn-small btn-danger" onclick="closeLoan('${loan.id}')">Close Loan</button>`}
+        ${status === 'closed' ? `<button class="btn-small btn-secondary" onclick="reopenLoan('${loan.id}')">Reopen Loan</button>` : `<button class="btn-small btn-secondary" onclick="recordLoanInterest('${loan.id}')">Record Interest</button>`}
         <button class="btn-small" onclick="viewLoanHistory('${loan.id}')">Payment History (${payments.length})</button>
+        ${status === 'active' ? `<button class="btn-small btn-danger" onclick="closeLoan('${loan.id}')">Close Loan</button>` : ''}
         <button class="btn-small btn-danger" onclick="deleteLoan('${loan.id}')">Delete</button>
       </div>`;
     list.appendChild(item);
