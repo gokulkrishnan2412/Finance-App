@@ -730,10 +730,14 @@
     "interestAmount": 4500,
     "type": "daily",
     "notes": "",
-    "received": 300,
+    "received": 600,
     "payments": [
       {
         "date": "2026-09-06",
+        "amount": 300
+      },
+      {
+        "date": "2026-09-07",
         "amount": 300
       }
     ],
@@ -754,9 +758,9 @@
         "day": 2,
         "amount": 300,
         "dueDate": "2026-09-06",
-        "received": false,
-        "receivedDate": null,
-        "receivedAmount": 0
+        "received": true,
+        "receivedDate": "2026-09-07",
+        "receivedAmount": 300
       },
       {
         "day": 3,
