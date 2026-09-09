@@ -92,8 +92,11 @@ async function fetchGithubFile(filePath) {
 
 async function saveGithubFile(filePath, contentArray, commitMessage) {
   const config = getGithubConfig();
-  if (!config.owner || !config.repo || !config.token) {
-    throw new Error('GitHub settings not configured. Please enter your Username, Repo, and Token in Settings.');
+  if (!config.owner || !config.repo) {
+    throw new Error('GitHub repository settings are not configured. Please enter your Username and Repo in Settings.');
+  }
+  if (!config.token) {
+    throw new Error('A GitHub Personal Access Token is required to add or change records. Enter your token in Settings.');
   }
 
   // Always fetch fresh sha right before writing to prevent 409 conflict
