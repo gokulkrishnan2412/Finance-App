@@ -3,14 +3,22 @@ let lendings = [];
 const localApiOrigin = 'http://localhost:5000';
 const nativeFetch = window.fetch.bind(window);
 const isLocalHost = ['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname);
+const defaultGithubOwner = 'gokulkrishnan2412';
+const defaultGithubRepo = 'Finance-App';
+const defaultGithubBranch = 'main';
 
 function getGithubConfig() {
   return {
-    owner: (localStorage.getItem('gh_owner') || '').trim(),
-    repo: (localStorage.getItem('gh_repo') || '').trim(),
-    branch: (localStorage.getItem('gh_branch') || 'main').trim(),
+    owner: (localStorage.getItem('gh_owner') || defaultGithubOwner).trim(),
+    repo: (localStorage.getItem('gh_repo') || defaultGithubRepo).trim(),
+    branch: (localStorage.getItem('gh_branch') || defaultGithubBranch).trim(),
     token: (localStorage.getItem('gh_token') || '').trim()
   };
+}
+
+function hasGithubReadConfig() {
+  const c = getGithubConfig();
+  return Boolean(c.owner && c.repo && c.branch);
 }
 
 function hasGithubConfig() {
@@ -47,17 +55,18 @@ const githubShaCache = {};
 
 async function fetchGithubFile(filePath) {
   const config = getGithubConfig();
-  if (!config.owner || !config.repo || !config.token) {
-    throw new Error('GitHub settings not configured. Please enter your Username, Repo, and Token in Settings.');
+  if (!config.owner || !config.repo || !config.branch) {
+    throw new Error('GitHub repository settings are not configured.');
   }
 
   const url = `https://api.github.com/repos/${encodeURIComponent(config.owner)}/${encodeURIComponent(config.repo)}/contents/${filePath}?ref=${encodeURIComponent(config.branch)}&_t=${Date.now()}`;
+  const headers = {
+    'Accept': 'application/vnd.github.v3+json',
+    'If-None-Match': ''
+  };
+  if (config.token) headers.Authorization = `Bearer ${config.token}`;
   const response = await nativeFetch(url, {
-    headers: {
-      'Authorization': `Bearer ${config.token}`,
-      'Accept': 'application/vnd.github.v3+json',
-      'If-None-Match': ''
-    }
+    headers
   });
 
   if (response.status === 404) {
@@ -439,7 +448,7 @@ window.fetch = async (url, options = {}) => {
 
   const path = url.slice(localApiOrigin.length);
 
-  if (hasGithubConfig()) {
+  if (hasGithubReadConfig()) {
     return handleGithubApi(path, options);
   }
 
@@ -1608,9 +1617,9 @@ async function testGithubConnection() {
   const branch = (document.getElementById('gh-branch')?.value || localStorage.getItem('gh_branch') || 'main').trim();
   const token = (document.getElementById('gh-token')?.value || localStorage.getItem('gh_token') || '').trim();
 
-  if (!owner || !repo || !token) {
+  if (!owner || !repo) {
     if (statusEl) {
-      statusEl.textContent = '❌ Please enter your GitHub Username, Repo Name, and Token.';
+      statusEl.textContent = '❌ Please enter your GitHub Username and Repo Name.';
       statusEl.style.color = '#dc3545';
     }
     return;
@@ -1618,17 +1627,20 @@ async function testGithubConnection() {
 
   try {
     const testUrl = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/backend/lendings.json?ref=${encodeURIComponent(branch)}&_t=${Date.now()}`;
+    const headers = {
+      'Accept': 'application/vnd.github.v3+json',
+      'User-Agent': 'Finance-App'
+    };
+    if (token) headers.Authorization = `Bearer ${token}`;
     const res = await nativeFetch(testUrl, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/vnd.github.v3+json'
-      }
+      headers
     });
 
     if (res.ok) {
       const fileData = await res.json();
       if (statusEl) {
-        statusEl.textContent = `✅ Connected! Successfully accessed backend/lendings.json (SHA: ${fileData.sha.substring(0, 7)})`;
+        const accessMode = token ? 'authenticated' : 'read-only';
+        statusEl.textContent = `✅ Connected (${accessMode})! Successfully accessed backend/lendings.json (SHA: ${fileData.sha.substring(0, 7)})`;
         statusEl.style.color = '#28a745';
       }
     } else if (res.status === 404) {
@@ -1701,6 +1713,10 @@ function updateStorageStatusText() {
     const c = getGithubConfig();
     statusEl.textContent = `📌 Mode: GITHUB REST API (${c.owner}/${c.repo} @ ${c.branch})`;
     statusEl.style.color = '#28a745';
+  } else if (hasGithubReadConfig()) {
+    const c = getGithubConfig();
+    statusEl.textContent = `📌 Mode: GITHUB READ-ONLY (${c.owner}/${c.repo} @ ${c.branch}); add a token to write`;
+    statusEl.style.color = '#0066cc';
   } else if (sheetsApiOrigin) {
     statusEl.textContent = `📌 Mode: GOOGLE SHEETS API (${sheetsApiOrigin.substring(0, 40)}...)`;
     statusEl.style.color = '#0066cc';
