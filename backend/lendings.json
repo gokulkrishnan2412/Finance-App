@@ -8,11 +8,15 @@
     "interestAmount": 7000,
     "type": "weekly",
     "notes": "",
-    "received": 3000,
+    "received": 9000,
     "payments": [
       {
         "date": "2026-08-29",
         "amount": 3000
+      },
+      {
+        "date": "2026-09-19",
+        "amount": 6000
       }
     ],
     "status": "active",
@@ -32,25 +36,25 @@
         "week": 2,
         "amount": 2000,
         "dueDate": "2026-08-21",
-        "received": false,
-        "receivedDate": null,
-        "receivedAmount": 1000
+        "received": true,
+        "receivedDate": "2026-09-19",
+        "receivedAmount": 2000
       },
       {
         "week": 3,
         "amount": 2000,
         "dueDate": "2026-08-28",
-        "received": false,
-        "receivedDate": null,
-        "receivedAmount": 0
+        "received": true,
+        "receivedDate": "2026-09-19",
+        "receivedAmount": 2000
       },
       {
         "week": 4,
         "amount": 2000,
         "dueDate": "2026-09-04",
-        "received": false,
-        "receivedDate": null,
-        "receivedAmount": 0
+        "received": true,
+        "receivedDate": "2026-09-19",
+        "receivedAmount": 2000
       },
       {
         "week": 5,
