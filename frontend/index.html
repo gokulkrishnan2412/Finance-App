@@ -52,6 +52,9 @@
     <!-- Main Content -->
     <main class="main-content">
       <div class="device-toolbar">
+        <button type="button" id="refresh-data" class="refresh-button" title="Reload data" aria-label="Reload data">
+          <span class="refresh-icon" aria-hidden="true">↻</span>
+        </button>
         <button type="button" id="device-toggle" class="device-toggle" title="Switch between mobile and desktop layout" aria-label="Switch layout">
           <span class="device-option" data-device="mobile" aria-hidden="true">▯</span>
           <span class="device-option" data-device="desktop" aria-hidden="true">▣</span>
@@ -482,7 +485,7 @@
   <div id="payment-modal" class="modal-overlay" style="display:none;">
     <div class="modal">
       <div class="modal-header">
-        <h3>Record Payment</h3>
+        <h3 id="payment-modal-title">Record Payment</h3>
         <button type="button" class="modal-close" onclick="closePaymentModal()">&times;</button>
       </div>
       <div class="modal-body">
@@ -498,7 +501,7 @@
         </div>
         <div class="form-actions modal-actions">
           <button type="button" class="btn-small btn-secondary" onclick="closePaymentModal()">Cancel</button>
-          <button type="button" class="btn-small" onclick="submitPayment()">Save Payment</button>
+          <button type="button" id="payment-submit-button" class="btn-small" onclick="submitPayment()">Save Payment</button>
         </div>
       </div>
     </div>
@@ -592,12 +595,12 @@
 
   <!-- Lending Details Modal -->
   <div id="details-modal" class="modal-overlay" style="display:none;">
-    <div class="modal">
+    <div class="modal details-modal">
       <div class="modal-header">
         <h3>Lending Details</h3>
         <button type="button" class="modal-close" onclick="closeDetailsModal()">&times;</button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body details-modal-body">
         <p id="details-person" class="payment-person"></p>
         <p id="details-meta" class="payment-outstanding"></p>
 

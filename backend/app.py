@@ -161,6 +161,54 @@ def record_payment(lending_id):
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
+@app.route("/edit_payment/<lending_id>/<int:payment_index>", methods=["PUT"])
+def edit_payment(lending_id, payment_index):
+    try:
+        data = request.get_json() or {}
+        amount = float(data.get('amount', 0))
+        payment_date = data.get('date')
+        if amount <= 0 or not payment_date:
+            return jsonify({"status": "error", "message": "A positive amount and payment date are required"}), 400
+
+        lending = next((lend for lend in lendings if str(lend.get('id')) == str(lending_id)), None)
+        if not lending:
+            return jsonify({"status": "error", "message": "Lending not found"}), 404
+
+        payments = lending.get('payments', [])
+        if payment_index < 0 or payment_index >= len(payments):
+            return jsonify({"status": "error", "message": "Payment not found"}), 404
+
+        payments[payment_index] = {**payments[payment_index], 'date': payment_date, 'amount': amount}
+        lending['received'] = sum(float(payment.get('amount', 0)) for payment in payments)
+
+        if isinstance(lending.get('schedule'), list):
+            for item in lending['schedule']:
+                item['received'] = False
+                item.pop('receivedDate', None)
+                item.pop('receivedAmount', None)
+            for payment in payments:
+                remaining = float(payment.get('amount', 0))
+                for item in lending['schedule']:
+                    if item.get('received') or remaining <= 0:
+                        continue
+                    item_amount = float(item.get('amount', 0))
+                    if remaining >= item_amount:
+                        item['received'] = True
+                        item['receivedDate'] = payment.get('date')
+                        item['receivedAmount'] = item_amount
+                        remaining -= item_amount
+                    else:
+                        item['receivedAmount'] = float(item.get('receivedAmount', 0)) + remaining
+                        remaining = 0
+
+        if lending.get('status') != 'closed':
+            lending['status'] = 'completed' if lending['received'] >= float(lending.get('returnAmount', 0)) else 'active'
+
+        save_lendings()
+        return jsonify({"status": "success", "lending": lending}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
 @app.route("/delete_lending/<lending_id>", methods=["DELETE"])
 def delete_lending(lending_id):
     try:

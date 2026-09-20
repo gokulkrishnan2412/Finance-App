@@ -90,6 +90,35 @@ def test_record_payment_updates_received_and_schedule(client):
     assert data["lending"]["schedule"][0]["received"] is True
 
 
+def test_edit_payment_recalculates_received_and_schedule(client):
+    backend.lendings = [{
+        "id": "1",
+        "name": "Alice",
+        "date": "2026-09-01",
+        "principalAmount": 10000,
+        "returnAmount": 12000,
+        "interestAmount": 2000,
+        "type": "weekly",
+        "received": 3000,
+        "payments": [{"date": "2026-09-02", "amount": 3000}],
+        "status": "active",
+        "schedule": [
+            {"amount": 3000, "received": True, "receivedDate": "2026-09-02", "receivedAmount": 3000, "dueDate": "2026-09-08"},
+            {"amount": 3000, "received": False, "dueDate": "2026-09-15"}
+        ]
+    }]
+    backend.save_lendings()
+
+    response = client.put("/edit_payment/1/0", json={"amount": 1500, "date": "2026-09-03"})
+
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["lending"]["received"] == 1500
+    assert data["lending"]["payments"][0] == {"date": "2026-09-03", "amount": 1500}
+    assert data["lending"]["schedule"][0]["received"] is False
+    assert data["lending"]["schedule"][0]["receivedAmount"] == 1500
+
+
 def test_close_lending_moves_record_to_closed_status(client):
     backend.lendings = [{
         "id": "1",

@@ -220,6 +220,50 @@ async function handleGithubApi(path, options = {}) {
       return { ok: true, status: 200, json: async () => ({ status: 'success', lending }) };
     }
 
+    if (endpoint === 'edit_payment') {
+      const paymentIndex = Number(pathParts[2]);
+      const { data } = await fetchGithubFile('backend/lendings.json');
+      const lending = data.find(l => String(l.id) === String(itemId));
+      if (!lending) throw new Error('Lending record not found');
+      if (!Array.isArray(lending.payments) || !lending.payments[paymentIndex]) throw new Error('Payment not found');
+
+      const amount = Number(bodyData.amount || 0);
+      const paymentDate = bodyData.date || new Date().toISOString().split('T')[0];
+      if (amount <= 0) throw new Error('Payment amount must be greater than zero');
+
+      lending.payments[paymentIndex] = { ...lending.payments[paymentIndex], date: paymentDate, amount };
+      lending.received = lending.payments.reduce((total, payment) => total + Number(payment.amount || 0), 0);
+      if (Array.isArray(lending.schedule)) {
+        lending.schedule.forEach(item => {
+          item.received = false;
+          delete item.receivedDate;
+          delete item.receivedAmount;
+        });
+        lending.payments.forEach(payment => {
+          let remaining = Number(payment.amount || 0);
+          lending.schedule.forEach(item => {
+            if (item.received || remaining <= 0) return;
+            const itemAmount = Number(item.amount || 0);
+            if (remaining >= itemAmount) {
+              item.received = true;
+              item.receivedDate = payment.date;
+              item.receivedAmount = itemAmount;
+              remaining -= itemAmount;
+            } else {
+              item.receivedAmount = Number(item.receivedAmount || 0) + remaining;
+              remaining = 0;
+            }
+          });
+        });
+      }
+      if (lending.status !== 'closed') {
+        lending.status = lending.received >= Number(lending.returnAmount || 0) ? 'completed' : 'active';
+      }
+
+      await saveGithubFile('backend/lendings.json', data, `Edit payment for ${lending.name || itemId}`);
+      return { ok: true, status: 200, json: async () => ({ status: 'success', lending }) };
+    }
+
     if (endpoint === 'delete_lending') {
       const { data } = await fetchGithubFile('backend/lendings.json');
       const filtered = data.filter(l => String(l.id) !== String(itemId));
@@ -505,6 +549,27 @@ document.getElementById('device-toggle').addEventListener('click', () => {
   updateDeviceToggle();
 });
 updateDeviceToggle();
+
+async function refreshApplicationData() {
+  const refreshButton = document.getElementById('refresh-data');
+  refreshButton.disabled = true;
+  refreshButton.classList.add('is-loading');
+  try {
+    await Promise.all([
+      loadDashboard('daily'),
+      loadDashboard('weekly'),
+      loadDashboard('monthly'),
+      loadChits(),
+      loadLoans(),
+      loadAnalytics()
+    ]);
+  } finally {
+    refreshButton.disabled = false;
+    refreshButton.classList.remove('is-loading');
+  }
+}
+
+document.getElementById('refresh-data').addEventListener('click', refreshApplicationData);
 
 // ============ PAGE NAVIGATION ============
 const menuItems = document.querySelectorAll('.menu-item');
@@ -1313,7 +1378,9 @@ async function viewLendingDetails(lendingId) {
     `;
 
     const paymentsDiv = document.getElementById('details-payments');
-    const payments = (lending.payments || []).slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+    const payments = (lending.payments || [])
+      .map((payment, paymentIndex) => ({ payment, paymentIndex }))
+      .sort((a, b) => new Date(a.payment.date) - new Date(b.payment.date));
     if (payments.length === 0) {
       paymentsDiv.innerHTML = '<p style="text-align: center; color: #999;">No payments recorded yet</p>';
     } else {
@@ -1321,14 +1388,15 @@ async function viewLendingDetails(lendingId) {
       paymentsDiv.innerHTML = `
         <table class="payments-table">
           <thead>
-            <tr><th>Date</th><th>Amount</th></tr>
+            <tr><th>Date</th><th>Amount</th><th>Action</th></tr>
           </thead>
           <tbody>
-            ${payments.map(p => {
-              totalPaid += p.amount;
-              return `<tr><td>${formatDate(p.date)}</td><td>₹${p.amount.toFixed(2)}</td></tr>`;
+            ${payments.map(({ payment, paymentIndex }) => {
+              const amount = Number(payment.amount || 0);
+              totalPaid += amount;
+              return `<tr><td>${formatDate(payment.date)}</td><td>₹${amount.toFixed(2)}</td><td><button type="button" class="btn-small btn-secondary" onclick="editPayment('${lending.id}', ${paymentIndex})">Edit</button></td></tr>`;
             }).join('')}
-            <tr class="payments-total-row"><td><strong>Total Received</strong></td><td><strong>₹${totalPaid.toFixed(2)}</strong></td></tr>
+            <tr class="payments-total-row"><td><strong>Total Received</strong></td><td><strong>₹${totalPaid.toFixed(2)}</strong></td><td></td></tr>
           </tbody>
         </table>
       `;
@@ -1344,6 +1412,30 @@ async function viewLendingDetails(lendingId) {
 
 function closeDetailsModal() {
   document.getElementById('details-modal').style.display = 'none';
+}
+
+function editPayment(lendingId, paymentIndex) {
+  apiFetch('/get_lendings')
+    .then(res => res.json())
+    .then(allLendings => {
+      const lending = allLendings.find(item => String(item.id) === String(lendingId));
+      const payment = lending?.payments?.[paymentIndex];
+      if (!payment) { alert('Payment not found'); return; }
+
+      document.getElementById('payment-person').textContent = lending.name;
+      document.getElementById('payment-outstanding').textContent = `Outstanding: ₹${getOutstandingAmount(lending).toFixed(2)}`;
+      document.getElementById('payment-amount').value = Number(payment.amount || 0).toFixed(2);
+      document.getElementById('payment-date').value = payment.date;
+      document.getElementById('payment-modal-title').textContent = 'Edit Payment';
+      document.getElementById('payment-submit-button').textContent = 'Update Payment';
+
+      const modal = document.getElementById('payment-modal');
+      modal.dataset.lendingId = lendingId;
+      modal.dataset.paymentIndex = paymentIndex;
+      modal.style.display = 'flex';
+      document.getElementById('payment-amount').focus();
+      document.getElementById('payment-amount').select();
+    });
 }
 
 function recordPayment(lendingId) {
@@ -1364,10 +1456,13 @@ function recordPayment(lendingId) {
       const amountInput = document.getElementById('payment-amount');
       amountInput.value = nextUnpaid ? nextUnpaid.amount.toFixed(2) : '';
       document.getElementById('payment-date').value = new Date().toISOString().split('T')[0];
+      document.getElementById('payment-modal-title').textContent = 'Record Payment';
+      document.getElementById('payment-submit-button').textContent = 'Save Payment';
 
       const modal = document.getElementById('payment-modal');
       modal.style.display = 'flex';
       modal.dataset.lendingId = lendingId;
+      delete modal.dataset.paymentIndex;
       amountInput.focus();
       amountInput.select();
     });
@@ -1380,6 +1475,7 @@ function closePaymentModal() {
 function submitPayment() {
   const modal = document.getElementById('payment-modal');
   const lendingId = modal.dataset.lendingId;
+  const paymentIndex = modal.dataset.paymentIndex;
   const amount = parseFloat(document.getElementById('payment-amount').value);
   const date = document.getElementById('payment-date').value;
 
@@ -1392,18 +1488,20 @@ function submitPayment() {
     return;
   }
 
-  apiFetch(`/record_payment/${lendingId}`, {
-    method: 'POST',
+  const isEditing = paymentIndex !== undefined;
+  apiFetch(isEditing ? `/edit_payment/${lendingId}/${paymentIndex}` : `/record_payment/${lendingId}`, {
+    method: isEditing ? 'PUT' : 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ amount, date })
   }).then(res => res.json()).then(result => {
     if (result.status === 'success') {
       closePaymentModal();
-      alert('Payment recorded successfully!');
+      alert(isEditing ? 'Payment updated successfully!' : 'Payment recorded successfully!');
       loadDashboard('daily');
       loadDashboard('weekly');
       loadDashboard('monthly');
       loadAnalytics();
+      if (isEditing) viewLendingDetails(lendingId);
     } else {
       alert('Error recording payment: ' + (result.message || 'Unknown error'));
     }
