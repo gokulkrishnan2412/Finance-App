@@ -115,11 +115,15 @@
     "interestAmount": 2000,
     "type": "monthly",
     "notes": "Nithyanandam amount took from gold loan, Puliyampatti",
-    "received": 2000,
+    "received": 8000,
     "payments": [
       {
         "date": "2026-08-18",
         "amount": 2000
+      },
+      {
+        "date": "2026-09-22",
+        "amount": 6000
       }
     ],
     "status": "active",
@@ -133,7 +137,7 @@
         "dueDate": "2026-07-18",
         "received": false,
         "receivedDate": null,
-        "receivedAmount": 2000
+        "receivedAmount": 8000
       },
       {
         "month": 2,
