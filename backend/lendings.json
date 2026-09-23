@@ -373,7 +373,7 @@
     "interestAmount": 1200,
     "type": "monthly",
     "notes": "",
-    "received": 3600,
+    "received": 4800,
     "payments": [
       {
         "date": "2026-06-11",
@@ -385,6 +385,10 @@
       },
       {
         "date": "2026-08-11",
+        "amount": 1200
+      },
+      {
+        "date": "2026-09-22",
         "amount": 1200
       }
     ],
@@ -399,7 +403,7 @@
         "dueDate": "2026-05-11",
         "received": false,
         "receivedDate": null,
-        "receivedAmount": 3600
+        "receivedAmount": 4800
       },
       {
         "month": 2,
