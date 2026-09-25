@@ -115,7 +115,7 @@
     "interestAmount": 500,
     "type": "monthly",
     "notes": "Given to nivi at chit date",
-    "received": 1000,
+    "received": 6000,
     "payments": [
       {
         "date": "2026-07-05",
@@ -124,6 +124,10 @@
       {
         "date": "2026-08-11",
         "amount": 500
+      },
+      {
+        "date": "2026-08-11",
+        "amount": 5000
       }
     ],
     "status": "active",
@@ -135,41 +139,41 @@
         "month": 1,
         "amount": 833.3333333333334,
         "dueDate": "2026-06-05",
-        "received": false,
-        "receivedDate": null,
-        "receivedAmount": 1000
+        "received": true,
+        "receivedDate": "2026-08-11",
+        "receivedAmount": 833.3333333333334
       },
       {
         "month": 2,
         "amount": 833.3333333333334,
         "dueDate": "2026-07-05",
-        "received": false,
-        "receivedDate": null,
-        "receivedAmount": 0
+        "received": true,
+        "receivedDate": "2026-08-11",
+        "receivedAmount": 833.3333333333334
       },
       {
         "month": 3,
         "amount": 833.3333333333334,
         "dueDate": "2026-08-05",
-        "received": false,
-        "receivedDate": null,
-        "receivedAmount": 0
+        "received": true,
+        "receivedDate": "2026-08-11",
+        "receivedAmount": 833.3333333333334
       },
       {
         "month": 4,
         "amount": 833.3333333333334,
         "dueDate": "2026-09-05",
-        "received": false,
-        "receivedDate": null,
-        "receivedAmount": 0
+        "received": true,
+        "receivedDate": "2026-08-11",
+        "receivedAmount": 833.3333333333334
       },
       {
         "month": 5,
         "amount": 833.3333333333334,
         "dueDate": "2026-10-05",
-        "received": false,
-        "receivedDate": null,
-        "receivedAmount": 0
+        "received": true,
+        "receivedDate": "2026-08-11",
+        "receivedAmount": 833.3333333333334
       },
       {
         "month": 6,
@@ -177,7 +181,7 @@
         "dueDate": "2026-11-05",
         "received": false,
         "receivedDate": null,
-        "receivedAmount": 0
+        "receivedAmount": 833.3333333333331
       },
       {
         "month": 7,
