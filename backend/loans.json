@@ -51,5 +51,15 @@
     "createdAt": "2026-09-04T05:53:39.385Z",
     "status": "closed",
     "closedAt": "2026-10-04T03:22:39.351Z"
+  },
+  {
+    "id": "1791084278493",
+    "bankName": "BOB Bank 2026 Gold Loan",
+    "date": "2026-10-02",
+    "loanAmount": 275000,
+    "monthlyInterest": 1900,
+    "notes": "",
+    "interestPayments": [],
+    "createdAt": "2026-10-04T03:24:39.327Z"
   }
 ]
