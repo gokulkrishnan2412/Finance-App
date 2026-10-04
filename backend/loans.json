@@ -6,7 +6,12 @@
     "loanAmount": 132000,
     "monthlyInterest": 737,
     "notes": "Need to pay every year. Payir kadan",
-    "interestPayments": [],
+    "interestPayments": [
+      {
+        "date": "2026-10-02",
+        "amount": 10000
+      }
+    ],
     "createdAt": "2026-09-04T05:49:53.706Z"
   },
   {
