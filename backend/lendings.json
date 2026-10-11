@@ -27,7 +27,7 @@
         "amount": 2000
       }
     ],
-    "status": "active",
+    "status": "closed",
     "createdAt": "2026-09-04T05:30:10.209Z",
     "duration": 10,
     "weeklyAmount": 2000,
@@ -112,7 +112,8 @@
         "receivedDate": null,
         "receivedAmount": 0
       }
-    ]
+    ],
+    "closedAt": "2026-10-11T05:29:22.394Z"
   },
   {
     "id": "1788500034252",
