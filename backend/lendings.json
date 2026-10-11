@@ -1754,5 +1754,103 @@
         "receivedAmount": 0
       }
     ]
+  },
+  {
+    "id": "1791696846759",
+    "name": "Dinesh",
+    "date": "2026-10-05",
+    "principalAmount": 17000,
+    "returnAmount": 20000,
+    "interestAmount": 3000,
+    "type": "weekly",
+    "notes": "",
+    "received": 0,
+    "payments": [],
+    "status": "active",
+    "createdAt": "2026-10-11T05:34:06.759Z",
+    "duration": 10,
+    "weeklyAmount": 2000,
+    "schedule": [
+      {
+        "week": 1,
+        "amount": 2000,
+        "dueDate": "2026-10-05",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "week": 2,
+        "amount": 2000,
+        "dueDate": "2026-10-12",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "week": 3,
+        "amount": 2000,
+        "dueDate": "2026-10-19",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "week": 4,
+        "amount": 2000,
+        "dueDate": "2026-10-26",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "week": 5,
+        "amount": 2000,
+        "dueDate": "2026-11-02",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "week": 6,
+        "amount": 2000,
+        "dueDate": "2026-11-09",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "week": 7,
+        "amount": 2000,
+        "dueDate": "2026-11-16",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "week": 8,
+        "amount": 2000,
+        "dueDate": "2026-11-23",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "week": 9,
+        "amount": 2000,
+        "dueDate": "2026-11-30",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "week": 10,
+        "amount": 2000,
+        "dueDate": "2026-12-07",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      }
+    ]
   }
 ]
