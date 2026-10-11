@@ -1647,5 +1647,103 @@
         "receivedAmount": 0
       }
     ]
+  },
+  {
+    "id": "1791696532635",
+    "name": "Arun Annan Auto-1",
+    "date": "2026-10-11",
+    "principalAmount": 13000,
+    "returnAmount": 20000,
+    "interestAmount": 7000,
+    "type": "weekly",
+    "notes": "",
+    "received": 0,
+    "payments": [],
+    "status": "active",
+    "createdAt": "2026-10-11T05:28:52.635Z",
+    "duration": 10,
+    "weeklyAmount": 2000,
+    "schedule": [
+      {
+        "week": 1,
+        "amount": 2000,
+        "dueDate": "2026-10-11",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "week": 2,
+        "amount": 2000,
+        "dueDate": "2026-10-18",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "week": 3,
+        "amount": 2000,
+        "dueDate": "2026-10-25",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "week": 4,
+        "amount": 2000,
+        "dueDate": "2026-11-01",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "week": 5,
+        "amount": 2000,
+        "dueDate": "2026-11-08",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "week": 6,
+        "amount": 2000,
+        "dueDate": "2026-11-15",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "week": 7,
+        "amount": 2000,
+        "dueDate": "2026-11-22",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "week": 8,
+        "amount": 2000,
+        "dueDate": "2026-11-29",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "week": 9,
+        "amount": 2000,
+        "dueDate": "2026-12-06",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "week": 10,
+        "amount": 2000,
+        "dueDate": "2026-12-13",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      }
+    ]
   }
 ]
