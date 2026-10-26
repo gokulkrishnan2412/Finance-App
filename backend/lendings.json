@@ -1818,8 +1818,13 @@
     "interestAmount": 3000,
     "type": "weekly",
     "notes": "",
-    "received": 0,
-    "payments": [],
+    "received": 2000,
+    "payments": [
+      {
+        "date": "2026-10-25",
+        "amount": 2000
+      }
+    ],
     "status": "active",
     "createdAt": "2026-10-11T05:34:06.759Z",
     "duration": 10,
@@ -1829,9 +1834,9 @@
         "week": 1,
         "amount": 2000,
         "dueDate": "2026-10-05",
-        "received": false,
-        "receivedDate": null,
-        "receivedAmount": 0
+        "received": true,
+        "receivedDate": "2026-10-25",
+        "receivedAmount": 2000
       },
       {
         "week": 2,
