@@ -1715,11 +1715,15 @@
     "interestAmount": 7000,
     "type": "weekly",
     "notes": "",
-    "received": 2000,
+    "received": 6000,
     "payments": [
       {
         "date": "2026-10-20",
         "amount": 2000
+      },
+      {
+        "date": "2026-11-06",
+        "amount": 4000
       }
     ],
     "status": "active",
@@ -1739,17 +1743,17 @@
         "week": 2,
         "amount": 2000,
         "dueDate": "2026-10-18",
-        "received": false,
-        "receivedDate": null,
-        "receivedAmount": 0
+        "received": true,
+        "receivedDate": "2026-11-06",
+        "receivedAmount": 2000
       },
       {
         "week": 3,
         "amount": 2000,
         "dueDate": "2026-10-25",
-        "received": false,
-        "receivedDate": null,
-        "receivedAmount": 0
+        "received": true,
+        "receivedDate": "2026-11-06",
+        "receivedAmount": 2000
       },
       {
         "week": 4,
