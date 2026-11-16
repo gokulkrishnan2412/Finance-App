@@ -1923,5 +1923,103 @@
         "receivedAmount": 0
       }
     ]
+  },
+  {
+    "id": "1794805394094",
+    "name": "Karthi",
+    "date": "2026-11-13",
+    "principalAmount": 8500,
+    "returnAmount": 10000,
+    "interestAmount": 1500,
+    "type": "weekly",
+    "notes": "Given to nivetha for Karthi",
+    "received": 0,
+    "payments": [],
+    "status": "active",
+    "createdAt": "2026-11-16T05:03:14.094Z",
+    "duration": 10,
+    "weeklyAmount": 1000,
+    "schedule": [
+      {
+        "week": 1,
+        "amount": 1000,
+        "dueDate": "2026-11-13",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "week": 2,
+        "amount": 1000,
+        "dueDate": "2026-11-20",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "week": 3,
+        "amount": 1000,
+        "dueDate": "2026-11-27",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "week": 4,
+        "amount": 1000,
+        "dueDate": "2026-12-04",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "week": 5,
+        "amount": 1000,
+        "dueDate": "2026-12-11",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "week": 6,
+        "amount": 1000,
+        "dueDate": "2026-12-18",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "week": 7,
+        "amount": 1000,
+        "dueDate": "2026-12-25",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "week": 8,
+        "amount": 1000,
+        "dueDate": "2027-01-01",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "week": 9,
+        "amount": 1000,
+        "dueDate": "2027-01-08",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      },
+      {
+        "week": 10,
+        "amount": 1000,
+        "dueDate": "2027-01-15",
+        "received": false,
+        "receivedDate": null,
+        "receivedAmount": 0
+      }
+    ]
   }
 ]
