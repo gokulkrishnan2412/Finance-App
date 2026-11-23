@@ -417,7 +417,7 @@
         "amount": 20000
       }
     ],
-    "status": "active",
+    "status": "closed",
     "createdAt": "2026-09-04T05:39:40.876Z",
     "duration": 12,
     "monthlyAmount": 2500,
@@ -518,7 +518,8 @@
         "receivedDate": null,
         "receivedAmount": 0
       }
-    ]
+    ],
+    "closedAt": "2026-11-23T15:47:28.703Z"
   },
   {
     "id": "1788500712500",
