@@ -1827,7 +1827,7 @@
     "interestAmount": 3000,
     "type": "weekly",
     "notes": "",
-    "received": 6000,
+    "received": 8000,
     "payments": [
       {
         "date": "2026-10-25",
@@ -1839,6 +1839,10 @@
       },
       {
         "date": "2026-11-21",
+        "amount": 2000
+      },
+      {
+        "date": "2026-11-23",
         "amount": 2000
       }
     ],
@@ -1875,9 +1879,9 @@
         "week": 4,
         "amount": 2000,
         "dueDate": "2026-10-26",
-        "received": false,
-        "receivedDate": null,
-        "receivedAmount": 0
+        "received": true,
+        "receivedDate": "2026-11-23",
+        "receivedAmount": 2000
       },
       {
         "week": 5,
